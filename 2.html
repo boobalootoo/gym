@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slow & Isometric Gym Routine</title>
+    <!-- Tailwind CSS CDN for easy styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Tone.js for sound effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+        }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        /* Style for clickable cards */
+        .exercise-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .exercise-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        /* Styling for the details section within each card */
+        .exercise-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, opacity 0.5s ease-out;
+            opacity: 0;
+            pointer-events: none; /* Disable interaction when collapsed */
+        }
+        .exercise-details.expanded {
+            max-height: 1000px; /* Adjusted to fit more content */
+            opacity: 1;
+            pointer-events: all; /* Enable interaction when expanded */
+        }
+
+        /* Modal specific styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .modal-step-action {
+            font-size: 2.5rem; /* Big text for 'LOWER'/'PRESS' */
+            font-weight: bold;
+            color: #1e3a8a; /* Darker blue */
+            margin-bottom: 1rem;
+        }
+
+        /* General Info Toggle Styles */
+        .general-info-header {
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            padding-bottom: 1rem; /* Add padding for separation */
+            border-bottom: 1px solid #cbd5e1; /* Add a subtle line */
+            margin-bottom: 1rem;
+        }
+        .general-info-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, opacity 0.5s ease-out;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .general-info-content.expanded {
+            max-height: 800px; /* Sufficient height to show all content */
+            opacity: 1;
+            pointer-events: all;
+        }
+        .toggle-icon {
+            transition: transform 0.3s ease-in-out;
+        }
+        .toggle-icon.expanded {
+            transform: rotate(180deg);
+        }
+
+        /* Draggable Notes Modal Styles */
+        .notes-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001; /* Higher than other modals if needed */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+        .notes-modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .notes-modal-content {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            width: 90%;
+            max-width: 400px;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            resize: both; /* Allow resizing */
+            overflow: hidden; /* Hide scrollbars unless content overflows */
+            position: absolute; /* For dragging */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            cursor: grab; /* Indicate draggable */
+        }
+        .notes-modal-header {
+            background-color: #3b82f6;
+            color: white;
+            padding: 0.75rem 1rem;
+            border-top-left-radius: 0.75rem;
+            border-top-right-radius: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: grab; /* Indicate draggable */
+        }
+        .notes-modal-body {
+            padding: 1rem;
+            flex-grow: 1;
+            overflow-y: auto; /* Scrollable content */
+        }
+        .notes-modal-body textarea {
+            width: 100%;
+            height: 150px; /* Initial height */
+            min-height: 100px;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.375rem;
+            padding: 0.5rem;
+            font-size: 0.9rem;
+            resize: vertical; /* Allow vertical resizing within the modal */
+            outline: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4 sm:p-6 md:p-8">
+
+    <!-- Main Container -->
+    <div class="w-full max-w-4xl bg-white shadow-xl rounded-xl p-6 sm:p-8 lg:p-10">
+
+        <!-- Header Section -->
+        <header class="text-center mb-8 sm:mb-10 relative">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-2">My Slow & Isometric Gym Routine</h1>
+            <p class="text-md sm:text-lg text-gray-600">Focus on control, time under tension, and powerful holds.</p>
+            <!-- Notes Button -->
+            <button class="absolute top-0 right-0 mt-2 mr-2 px-3 py-1 bg-gray-200 text-gray-700 text-sm font-semibold rounded-lg shadow-sm hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75" onclick="openNotesModal()">Notes</button>
+        </header>
+
+        <!-- General Information Section -->
+        <section class="bg-blue-50 p-6 rounded-lg shadow-md mb-8 sm:mb-10">
+            <div class="general-info-header" onclick="toggleGeneralInfo()">
+                <h2 class="text-2xl font-bold text-blue-800">General Information</h2>
+                <svg id="generalInfoToggleIcon" class="w-6 h-6 text-blue-800 toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </div>
+            <div id="generalInfoContent" class="general-info-content">
+                <div class="mb-6 mt-4">
+                    <h3 class="text-xl font-semibold text-blue-700 mb-2">Key Principles for This Routine:</h3>
+                    <ul class="list-disc list-inside text-gray-700 space-y-1">
+                        <li><strong class="text-blue-600">Slow Concentric & Eccentric Phases:</strong> For movements, aim for 5 seconds on the lifting phase and 5 seconds on the lowering phase.</li>
+                        <li><strong class="text-blue-600">Isometric Holds:</strong> Hold the most challenging part of the movement (or a specific static position) for the prescribed duration.</li>
+                        <li><strong class="text-blue-600">Control is Paramount:</strong> Forget about momentum. Every inch should be controlled.</li>
+                        <li><strong class="text-blue-600">Breathing:</strong> Remember to breathe throughout your exercises, especially during holds.</li>
+                        <li><strong class="text-blue-600">Form First:</strong> Always prioritize perfect form over heavy weight. Start lighter than you normally would.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-semibold text-blue-700 mb-2">How to Select the Correct Weight for Beginners:</h3>
+                    <ul class="list-disc list-inside text-gray-700 space-y-1">
+                        <li><strong class="text-blue-600">The "Feel" Test (Slow Reps):</strong> Choose a weight that allows you to complete the prescribed 6-12 very slow repetitions (e.g., 5 seconds up, 5 seconds down) while maintaining strict form. The last 1-2 reps should feel challenging.</li>
+                        <li><strong class="text-blue-600">The "Feel" Test (Isometric Holds):</strong> Choose a weight that allows you to hold the position for the prescribed 20-45 seconds. You should feel intense muscle contraction, and by the end of the hold, the muscle should be quivering.</li>
+                        <li><strong class="text-blue-600">Trial and Error:</strong> Don't be afraid to experiment. Adjust the weight if it feels too easy or too hard.</li>
+                        <li><strong class="text-blue-600">Focus on Connection:</strong> Concentrate on feeling the target muscle work. If you're struggling with form, the weight is likely too heavy.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Exercise List -->
+        <main class="grid grid-cols-1 gap-6 sm:gap-8">
+
+            <!-- Exercise Card Template -->
+            <!-- Each exercise will follow this structure -->
+
+            <!-- 1. Leg Press (Slow Reps) -->
+            <div class="exercise-card bg-gray-50 p-5 rounded-lg shadow-md flex flex-col sm:flex-row items-center sm:items-start gap-4" data-exercise-id="leg-press-slow-reps">
+                <div class="flex-shrink-0 w-full sm:w-48 h-32 sm:h-auto overflow-hidden rounded-md">
+                    <img src="https://placehold.co/300x200/a0c4ff/ffffff?text=Leg+Press" alt="Leg Press Machine" class="w-full h-full object-cover rounded-md">
+                </div>
+                <div class="flex-grow text-center sm:text-left">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">1. Leg Press (Slow Reps)</h2>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Working:</strong> Quadriceps (90), Glutes (85), Hamstrings (60)</p>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Difficulty:</strong> Intermediate</p>
+                    <p class="text-gray-700"><strong class="text-blue-600">Duration:</strong> 2-3 sets, 6-8 very slow reps</p>
+                    <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-4">
+                        <button class="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onclick="event.stopPropagation(); startExercise('leg-press-slow-reps');">Start Exercise</button>
+                        <button class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75" onclick="event.stopPropagation(); toggleDetails(this.parentNode.parentNode);">Notes on Form</button>
+                    </div>
+                    <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
+                        <button class="px-3 py-1 bg-green-500 text-white text-sm font-semibold rounded-lg hover:bg-green-600" onclick="event.stopPropagation(); showVariation('leg-press-slow-reps', 'easier');">Easier</button>
+                        <button class="px-3 py-1 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600" onclick="event.stopPropagation(); showVariation('leg-press-slow-reps', 'harder');">Harder</button>
+                    </div>
+                </div>
+                <div class="exercise-details w-full mt-4 pt-4 border-t border-gray-200 text-left" onclick="event.stopPropagation(); toggleDetails(this.parentNode);">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Notes on Form:</h3>
+                    <p class="text-gray-600 mb-2">Sit with your back firmly against the pad. Place feet shoulder-width apart in the middle of the plate. Lower slowly (5s), press slowly (5s), keeping a slight bend at the top. Inhale as you lower, exhale as you press.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Equipment Needed:</h3>
+                    <p class="text-gray-600 mb-2">Leg Press Machine</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Benefits:</h3>
+                    <p class="text-gray-600 mb-2">Strengthens major leg muscles, improving walking, climbing stairs, and overall lower body power for daily activities.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Easier Variation:</h3>
+                    <p class="text-gray-600 mb-2">Use less weight or perform bodyweight squats with a slow tempo.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Harder Variation:</h3>
+                    <p class="text-gray-600 mb-2">Increase weight, increase the lowering/pressing time to 6-8 seconds, or perform single-leg presses.</p>
+                </div>
+            </div>
+
+            <!-- 1. Leg Press (Isometric Hold) -->
+            <div class="exercise-card bg-gray-50 p-5 rounded-lg shadow-md flex flex-col sm:flex-row items-center sm:items-start gap-4" data-exercise-id="leg-press-hold">
+                <div class="flex-shrink-0 w-full sm:w-48 h-32 sm:h-auto overflow-hidden rounded-md">
+                    <img src="https://placehold.co/300x200/a0c4ff/ffffff?text=Leg+Press+Hold" alt="Leg Press Machine" class="w-full h-full object-cover rounded-md">
+                </div>
+                <div class="flex-grow text-center sm:text-left">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">2. Leg Press (Isometric Hold)</h2>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Working:</strong> Quadriceps (95), Glutes (90), Hamstrings (65)</p>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Difficulty:</strong> Intermediate</p>
+                    <p class="text-gray-700"><strong class="text-blue-600">Duration:</strong> 2-3 sets, 30-45 sec hold</p>
+                    <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-4">
+                        <button class="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onclick="event.stopPropagation(); startExercise('leg-press-hold');">Start Exercise</button>
+                        <button class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75" onclick="event.stopPropagation(); toggleDetails(this.parentNode.parentNode);">Notes on Form</button>
+                    </div>
+                    <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
+                        <button class="px-3 py-1 bg-green-500 text-white text-sm font-semibold rounded-lg hover:bg-green-600" onclick="event.stopPropagation(); showVariation('leg-press-hold', 'easier');">Easier</button>
+                        <button class="px-3 py-1 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600" onclick="event.stopPropagation(); showVariation('leg-press-hold', 'harder');">Harder</button>
+                    </div>
+                </div>
+                <div class="exercise-details w-full mt-4 pt-4 border-t border-gray-200 text-left" onclick="event.stopPropagation(); toggleDetails(this.parentNode);">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Notes on Form:</h3>
+                    <p class="text-gray-600 mb-2">Press the weight up, then slowly lower it about halfway down (or to a challenging point where your knees are at roughly a 90-degree angle). Hold this position steadily. Breathe continuously during the hold.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Equipment Needed:</h3>
+                    <p class="text-gray-600 mb-2">Leg Press Machine</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Benefits:</h3>
+                    <p class="text-gray-600 mb-2">Builds static strength and endurance in the legs, beneficial for holding positions, improving stability, and reducing joint stress.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Easier Variation:</h3>
+                    <p class="text-gray-600 mb-2">Use less weight or hold for a shorter duration. Perform a wall sit for a similar bodyweight isometric.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Harder Variation:</h3>
+                    <p class="text-gray-600 mb-2">Increase weight or hold for a longer duration. Perform a single-leg isometric hold.</p>
+                </div>
+            </div>
+
+            <!-- 2. Goblet Squat (Slow Movement) -->
+            <div class="exercise-card bg-gray-50 p-5 rounded-lg shadow-md flex flex-col sm:flex-row items-center sm:items-start gap-4" data-exercise-id="goblet-squat-slow-reps">
+                <div class="flex-shrink-0 w-full sm:w-48 h-32 sm:h-auto overflow-hidden rounded-md">
+                    <img src="https://placehold.co/300x200/a0c4ff/ffffff?text=Goblet+Squat" alt="Person doing Goblet Squat" class="w-full h-full object-cover rounded-md">
+                </div>
+                <div class="flex-grow text-center sm:text-left">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">3. Goblet Squat (Slow Reps)</h2>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Working:</strong> Quadriceps (80), Glutes (75), Hamstrings (60), Core (70)</p>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Difficulty:</strong> Beginner</p>
+                    <p class="text-gray-700"><strong class="text-blue-600">Duration:</strong> 2-3 sets, 6-10 very slow reps</p>
+                    <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-4">
+                        <button class="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onclick="event.stopPropagation(); startExercise('goblet-squat-slow-reps');">Start Exercise</button>
+                        <button class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75" onclick="event.stopPropagation(); toggleDetails(this.parentNode.parentNode);">Notes on Form</button>
+                    </div>
+                    <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
+                        <button class="px-3 py-1 bg-green-500 text-white text-sm font-semibold rounded-lg hover:bg-green-600" onclick="event.stopPropagation(); showVariation('goblet-squat-slow-reps', 'easier');">Easier</button>
+                        <button class="px-3 py-1 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600" onclick="event.stopPropagation(); showVariation('goblet-squat-slow-reps', 'harder');">Harder</button>
+                    </div>
+                </div>
+                <div class="exercise-details w-full mt-4 pt-4 border-t border-gray-200 text-left" onclick="event.stopPropagation(); toggleDetails(this.parentNode);">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Notes on Form:</h3>
+                    <p class="text-gray-600 mb-2">Stand feet slightly wider than shoulder-width, toes out. Hold weight at chest. Slowly lower for 5s, pushing hips back, keeping chest up. Pause briefly, then slowly rise for 5s. Inhale down, exhale up.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Equipment Needed:</h3>
+                    <p class="text-gray-600 mb-2">Kettlebell or Dumbbell</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Benefits:</h3>
+                    <p class="text-gray-600 mb-2">Improves functional strength for lifting and bending, enhances core stability, and builds strong legs for everyday movements.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Easier Variation:</h3>
+                    <p class="text-gray-600 mb-2">Use a lighter weight or perform bodyweight squats (wall sit for isometric).</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Harder Variation:</h3>
+                    <p class="text-gray-600 mb-2">Increase weight, increase tempo time, or perform a pause squat at the bottom.</p>
+                </div>
+            </div>
+
+            <!-- 3. Multi-Press (Slow Chest Press) -->
+            <div class="exercise-card bg-gray-50 p-5 rounded-lg shadow-md flex flex-col sm:flex-row items-center sm:items-start gap-4" data-exercise-id="multi-press-slow-reps">
+                <div class="flex-shrink-0 w-full sm:w-48 h-32 sm:h-auto overflow-hidden rounded-md">
+                    <img src="https://placehold.co/300x200/a0c4ff/ffffff?text=Multi-Press" alt="Multi-Press Machine" class="w-full h-full object-cover rounded-md">
+                </div>
+                <div class="flex-grow text-center sm:text-left">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">4. Multi-Press (Slow Reps)</h2>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Working:</strong> Chest (90), Front Shoulders (70), Triceps (80)</p>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Difficulty:</strong> Intermediate</p>
+                    <p class="text-gray-700"><strong class="text-blue-600">Duration:</strong> 2-3 sets, 8-12 slow reps</p>
+                    <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-4">
+                        <button class="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onclick="event.stopPropagation(); startExercise('multi-press-slow-reps');">Start Exercise</button>
+                        <button class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75" onclick="event.stopPropagation(); toggleDetails(this.parentNode.parentNode);">Notes on Form</button>
+                    </div>
+                    <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
+                        <button class="px-3 py-1 bg-green-500 text-white text-sm font-semibold rounded-lg hover:bg-green-600" onclick="event.stopPropagation(); showVariation('multi-press-slow-reps', 'easier');">Easier</button>
+                        <button class="px-3 py-1 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600" onclick="event.stopPropagation(); showVariation('multi-press-slow-reps', 'harder');">Harder</button>
+                    </div>
+                </div>
+                <div class="exercise-details w-full mt-4 pt-4 border-t border-gray-200 text-left" onclick="event.stopPropagation(); toggleDetails(this.parentNode);">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Notes on Form:</h3>
+                    <p class="text-gray-600 mb-2">Adjust seat for handles at mid-chest. Back firm, feet flat. Slowly press handles away (5s), squeezing chest. Slowly return (5s), controlling weight. Exhale as you press, inhale as you return.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Equipment Needed:</h3>
+                    <p class="text-gray-600 mb-2">Multi-Press Machine</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Benefits:</h3>
+                    <p class="text-gray-600 mb-2">Builds pushing strength for everyday tasks like pushing open heavy doors or lifting objects overhead. Improves upper body posture.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Easier Variation:</h3>
+                    <p class="text-gray-600 mb-2">Use less weight or perform slow push-ups on your knees.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Harder Variation:</h3>
+                    <p class="text-gray-600 mb-2">Increase weight, increase tempo time, or perform a pause at the bottom of the press.</p>
+                </div>
+            </div>
+
+            <!-- 4. Lat Pulldown (Slow Reps) -->
+            <div class="exercise-card bg-gray-50 p-5 rounded-lg shadow-md flex flex-col sm:flex-row items-center sm:items-start gap-4" data-exercise-id="lat-pulldown-slow-reps">
+                <div class="flex-shrink-0 w-full sm:w-48 h-32 sm:h-auto overflow-hidden rounded-md">
+                    <img src="https://placehold.co/300x200/a0c4ff/ffffff?text=Lat+Pulldown" alt="Lat Pulldown Machine" class="w-full h-full object-cover rounded-md">
+                </div>
+                <div class="flex-grow text-center sm:text-left">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">5. Lat Pulldown (Slow Reps)</h2>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Working:</strong> Lats (90), Biceps (75), Mid-Upper Back (60)</p>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Difficulty:</strong> Intermediate</p>
+                    <p class="text-gray-700"><strong class="text-blue-600">Duration:</strong> 2-3 sets, 6-10 slow reps</p>
+                    <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-4">
+                        <button class="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onclick="event.stopPropagation(); startExercise('lat-pulldown-slow-reps');">Start Exercise</button>
+                        <button class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75" onclick="event.stopPropagation(); toggleDetails(this.parentNode.parentNode);">Notes on Form</button>
+                    </div>
+                    <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
+                        <button class="px-3 py-1 bg-green-500 text-white text-sm font-semibold rounded-lg hover:bg-green-600" onclick="event.stopPropagation(); showVariation('lat-pulldown-slow-reps', 'easier');">Easier</button>
+                        <button class="px-3 py-1 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600" onclick="event.stopPropagation(); showVariation('lat-pulldown-slow-reps', 'harder');">Harder</button>
+                    </div>
+                </div>
+                <div class="exercise-details w-full mt-4 pt-4 border-t border-gray-200 text-left" onclick="event.stopPropagation(); toggleDetails(this.parentNode);">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Notes on Form:</h3>
+                    <p class="text-gray-600 mb-2">Secure thighs under pad. Grasp bar overhand, slightly wider than shoulder-width. Lean back slightly. Slowly pull bar to upper chest (5s), squeezing lats. Slowly release (5s). Exhale down, inhale up.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Equipment Needed:</h3>
+                    <p class="text-gray-600 mb-2">Lat Pulldown Machine</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Benefits:</h3>
+                    <p class="text-gray-600 mb-2">Strengthens back muscles crucial for pulling, improving posture, and making tasks like opening heavy doors or carrying groceries easier.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Easier Variation:</h3>
+                    <p class="text-gray-600 mb-2">Use less weight or perform slow tempo resistance band pulldowns.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Harder Variation:</h3>
+                    <p class="text-gray-600 mb-2">Increase weight, increase tempo time, or perform a pause at the bottom of the pull.</p>
+                </div>
+            </div>
+
+            <!-- 4. Lat Pulldown (Isometric Hold) -->
+            <div class="exercise-card bg-gray-50 p-5 rounded-lg shadow-md flex flex-col sm:flex-row items-center sm:items-start gap-4" data-exercise-id="lat-pulldown-hold">
+                <div class="flex-shrink-0 w-full sm:w-48 h-32 sm:h-auto overflow-hidden rounded-md">
+                    <img src="https://placehold.co/300x200/a0c4ff/ffffff?text=Lat+Pulldown+Hold" alt="Lat Pulldown Machine" class="w-full h-full object-cover rounded-md">
+                </div>
+                <div class="flex-grow text-center sm:text-left">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">6. Lat Pulldown (Isometric Hold)</h2>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Working:</strong> Lats (95), Biceps (80), Mid-Upper Back (65)</p>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Difficulty:</strong> Intermediate</p>
+                    <p class="text-gray-700"><strong class="text-blue-600">Duration:</strong> 2-3 sets, 20-30 sec hold</p>
+                    <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-4">
+                        <button class="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onclick="event.stopPropagation(); startExercise('lat-pulldown-hold');">Start Exercise</button>
+                        <button class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75" onclick="event.stopPropagation(); toggleDetails(this.parentNode.parentNode);">Notes on Form</button>
+                    </div>
+                    <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
+                        <button class="px-3 py-1 bg-green-500 text-white text-sm font-semibold rounded-lg hover:bg-green-600" onclick="event.stopPropagation(); showVariation('lat-pulldown-hold', 'easier');">Easier</button>
+                        <button class="px-3 py-1 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600" onclick="event.stopPropagation(); showVariation('lat-pulldown-hold', 'harder');">Harder</button>
+                    </div>
+                </div>
+                <div class="exercise-details w-full mt-4 pt-4 border-t border-gray-200 text-left" onclick="event.stopPropagation(); toggleDetails(this.parentNode);">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Notes on Form:</h3>
+                    <p class="text-gray-600 mb-2">Secure thighs under pad. Grasp bar overhand, slightly wider than shoulder-width. Lean back slightly. Pull the bar down to your upper chest and hold that contracted position, squeezing your shoulder blades together and down. Breathe continuously during the hold.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Equipment Needed:</h3>
+                    <p class="text-gray-600 mb-2">Lat Pulldown Machine</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Benefits:</h3>
+                    <p class="text-gray-600 mb-2">Builds static strength and endurance in the back, improving grip strength and stability for tasks requiring sustained pulling or holding.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Easier Variation:</h3>
+                    <p class="text-gray-600 mb-2">Use less weight or hold for a shorter duration. Perform a dead hang from a pull-up bar for a similar isometric.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Harder Variation:</h3>
+                    <p class="text-gray-600 mb-2">Increase weight or hold for a longer duration. Perform a flexed-arm hang from a pull-up bar.</p>
+                </div>
+            </div>
+
+            <!-- 5. Cable Fly Hold -->
+            <div class="exercise-card bg-gray-50 p-5 rounded-lg shadow-md flex flex-col sm:flex-row items-center sm:items-start gap-4" data-exercise-id="cable-fly-hold">
+                <div class="flex-shrink-0 w-full sm:w-48 h-32 sm:h-auto overflow-hidden rounded-md">
+                    <img src="https://placehold.co/300x200/a0c4ff/ffffff?text=Cable+Fly" alt="Cable Crossover Machine" class="w-full h-full object-cover rounded-md">
+                </div>
+                <div class="flex-grow text-center sm:text-left">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">7. Cable Fly (Isometric Hold)</h2>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Working:</strong> Chest (95), Front Shoulders (60)</p>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Difficulty:</strong> Intermediate</p>
+                    <p class="text-gray-700"><strong class="text-blue-600">Duration:</strong> 2-3 sets, 20-30 sec hold</p>
+                    <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-4">
+                        <button class="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onclick="event.stopPropagation(); startExercise('cable-fly-hold');">Start Exercise</button>
+                        <button class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75" onclick="event.stopPropagation(); toggleDetails(this.parentNode.parentNode);">Notes on Form</button>
+                    </div>
+                    <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
+                        <button class="px-3 py-1 bg-green-500 text-white text-sm font-semibold rounded-lg hover:bg-green-600" onclick="event.stopPropagation(); showVariation('cable-fly-hold', 'easier');">Easier</button>
+                        <button class="px-3 py-1 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600" onclick="event.stopPropagation(); showVariation('cable-fly-hold', 'harder');">Harder</button>
+                    </div>
+                </div>
+                <div class="exercise-details w-full mt-4 pt-4 border-t border-gray-200 text-left" onclick="event.stopPropagation(); toggleDetails(this.parentNode);">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Notes on Form:</h3>
+                    <p class="text-gray-600 mb-2">Set pulleys to shoulder height. Stand in center, handles in each hand. Step forward slightly, slight bend in elbows. Bring hands together in a wide arc in front of chest, squeezing pectorals hard. Hold steadily. Breathe continuously.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Equipment Needed:</h3>
+                    <p class="text-gray-600 mb-2">Cable Crossover Machine</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Benefits:</h3>
+                    <p class="text-gray-600 mb-2">Develops static strength in the chest, improving stability for pushing movements and enhancing muscle definition.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Easier Variation:</h3>
+                    <p class="text-gray-600 mb-2">Use less weight or hold for a shorter duration. Perform an isometric push-up hold against a wall.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Harder Variation:</h3>
+                    <p class="text-gray-600 mb-2">Increase weight or hold for a longer duration. Perform a tighter squeeze or a single-arm hold.</p>
+                </div>
+            </div>
+
+            <!-- 6. Dumbbell Lateral Raise (Slow Reps) -->
+            <div class="exercise-card bg-gray-50 p-5 rounded-lg shadow-md flex flex-col sm:flex-row items-center sm:items-start gap-4" data-exercise-id="lateral-raise-slow-reps">
+                <div class="flex-shrink-0 w-full sm:w-48 h-32 sm:h-auto overflow-hidden rounded-md">
+                    <img src="https://placehold.co/300x200/a0c4ff/ffffff?text=Lateral+Raise" alt="Person doing Dumbbell Lateral Raise" class="w-full h-full object-cover rounded-md">
+                </div>
+                <div class="flex-grow text-center sm:text-left">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">8. Dumbbell Lateral Raise (Slow Reps)</h2>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Working:</strong> Side Shoulders (90), Front Shoulders (50), Rear Shoulders (30)</p>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Difficulty:</strong> Intermediate</p>
+                    <p class="text-gray-700"><strong class="text-blue-600">Duration:</strong> 2-3 sets, 8-12 slow reps</p>
+                    <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-4">
+                        <button class="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onclick="event.stopPropagation(); startExercise('lateral-raise-slow-reps');">Start Exercise</button>
+                        <button class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75" onclick="event.stopPropagation(); toggleDetails(this.parentNode.parentNode);">Notes on Form</button>
+                    </div>
+                    <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
+                        <button class="px-3 py-1 bg-green-500 text-white text-sm font-semibold rounded-lg hover:bg-green-600" onclick="event.stopPropagation(); showVariation('lateral-raise-slow-reps', 'easier');">Easier</button>
+                        <button class="px-3 py-1 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600" onclick="event.stopPropagation(); showVariation('lateral-raise-slow-reps', 'harder');">Harder</button>
+                    </div>
+                </div>
+                <div class="exercise-details w-full mt-4 pt-4 border-t border-gray-200 text-left" onclick="event.stopPropagation(); toggleDetails(this.parentNode);">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Notes on Form:</h3>
+                    <p class="text-gray-600 mb-2">Stand tall, slight knee bend. Hold light dumbbells by sides, slight elbow bend. Slowly raise dumbbells out to sides (5s) to shoulder height, leading with elbows. Avoid shrugging. Slowly lower (5s). Exhale up, inhale down.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Equipment Needed:</h3>
+                    <p class="text-gray-600 mb-2">Dumbbells</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Benefits:</h3>
+                    <p class="text-gray-600 mb-2">Builds wider, stronger shoulders, improving stability for overhead movements and enhancing the appearance of your upper body.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Easier Variation:</h3>
+                    <p class="text-gray-600 mb-2">Use lighter dumbbells or perform single-arm raises.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Harder Variation:</h3>
+                    <p class="text-gray-600 mb-2">Increase weight, increase tempo time, or perform a pause at the top of the raise.</p>
+                </div>
+            </div>
+
+            <!-- 6. Dumbbell Lateral Raise (Isometric Hold) -->
+            <div class="exercise-card bg-gray-50 p-5 rounded-lg shadow-md flex flex-col sm:flex-row items-center sm:items-start gap-4" data-exercise-id="lateral-raise-hold">
+                <div class="flex-shrink-0 w-full sm:w-48 h-32 sm:h-auto overflow-hidden rounded-md">
+                    <img src="https://placehold.co/300x200/a0c4ff/ffffff?text=Lateral+Raise+Hold" alt="Person doing Dumbbell Lateral Raise" class="w-full h-full object-cover rounded-md">
+                </div>
+                <div class="flex-grow text-center sm:text-left">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">9. Dumbbell Lateral Raise (Isometric Hold)</h2>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Working:</strong> Side Shoulders (95), Front Shoulders (65), Rear Shoulders (35)</p>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Difficulty:</strong> Intermediate</p>
+                    <p class="text-gray-700"><strong class="text-blue-600">Duration:</strong> 2-3 sets, 15-25 sec hold</p>
+                    <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-4">
+                        <button class="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onclick="event.stopPropagation(); startExercise('lateral-raise-hold');">Start Exercise</button>
+                        <button class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75" onclick="event.stopPropagation(); toggleDetails(this.parentNode.parentNode);">Notes on Form</button>
+                    </div>
+                    <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
+                        <button class="px-3 py-1 bg-green-500 text-white text-sm font-semibold rounded-lg hover:bg-green-600" onclick="event.stopPropagation(); showVariation('lateral-raise-hold', 'easier');">Easier</button>
+                        <button class="px-3 py-1 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600" onclick="event.stopPropagation(); showVariation('lateral-raise-hold', 'harder');">Harder</button>
+                    </div>
+                </div>
+                <div class="exercise-details w-full mt-4 pt-4 border-t border-gray-200 text-left" onclick="event.stopPropagation(); toggleDetails(this.parentNode);">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Notes on Form:</h3>
+                    <p class="text-gray-600 mb-2">Stand tall, slight knee bend. Hold light dumbbells by sides, slight elbow bend. Raise dumbbells out to sides to shoulder height and hold this position, feeling the burn in the side of your shoulders. Breathe continuously during holds.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Equipment Needed:</h3>
+                    <p class="text-gray-600 mb-2">Dumbbells</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Benefits:</h3>
+                    <p class="text-gray-600 mb-2">Develops static strength in the side shoulders, improving shoulder stability and endurance for carrying objects or maintaining arm positions.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Easier Variation:</h3>
+                    <p class="text-gray-600 mb-2">Use lighter dumbbells or hold for a shorter duration. Perform a wall-assisted lateral raise hold.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Harder Variation:</h3>
+                    <p class="text-gray-600 mb-2">Increase weight or hold for a longer duration. Perform a single-arm lateral raise hold.</p>
+                </div>
+            </div>
+
+            <!-- 7. Cable Bicep Curl (Slow Reps) -->
+            <div class="exercise-card bg-gray-50 p-5 rounded-lg shadow-md flex flex-col sm:flex-row items-center sm:items-start gap-4" data-exercise-id="bicep-curl-slow-reps">
+                <div class="flex-shrink-0 w-full sm:w-48 h-32 sm:h-auto overflow-hidden rounded-md">
+                    <img src="https://placehold.co/300x200/a0c4ff/ffffff?text=Bicep+Curl" alt="Person doing Cable Bicep Curl" class="w-full h-full object-cover rounded-md">
+                </div>
+                <div class="flex-grow text-center sm:text-left">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">10. Cable Bicep Curl (Slow Reps)</h2>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Working:</strong> Biceps (90), Forearms (60)</p>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Difficulty:</strong> Beginner</p>
+                    <p class="text-gray-700"><strong class="text-blue-600">Duration:</strong> 2-3 sets, 8-12 slow reps</p>
+                    <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-4">
+                        <button class="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onclick="event.stopPropagation(); startExercise('bicep-curl-slow-reps');">Start Exercise</button>
+                        <button class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75" onclick="event.stopPropagation(); toggleDetails(this.parentNode.parentNode);">Notes on Form</button>
+                    </div>
+                    <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
+                        <button class="px-3 py-1 bg-green-500 text-white text-sm font-semibold rounded-lg hover:bg-green-600" onclick="event.stopPropagation(); showVariation('bicep-curl-slow-reps', 'easier');">Easier</button>
+                        <button class="px-3 py-1 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600" onclick="event.stopPropagation(); showVariation('bicep-curl-slow-reps', 'harder');">Harder</button>
+                    </div>
+                </div>
+                <div class="exercise-details w-full mt-4 pt-4 border-t border-gray-200 text-left" onclick="event.stopPropagation(); toggleDetails(this.parentNode);">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Notes on Form:</h3>
+                    <p class="text-gray-600 mb-2">Stand facing low pulley, feet shoulder-width. Grasp bar/rope underhand, hands shoulder-width. Keep elbows tucked. Slowly curl bar up (5s), squeezing biceps. Slowly lower (5s) until arms fully extended but not locked. Exhale up, inhale down.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Equipment Needed:</h3>
+                    <p class="text-gray-600 mb-2">Cable Crossover Machine (with bar/rope attachment)</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Benefits:</h3>
+                    <p class="text-gray-600 mb-2">Strengthens arm muscles for lifting, carrying, and pulling objects. Improves arm definition and overall upper body strength.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Easier Variation:</h3>
+                    <p class="text-gray-600 mb-2">Use less weight or perform slow tempo dumbbell curls.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Harder Variation:</h3>
+                    <p class="text-gray-600 mb-2">Increase weight, increase tempo time, or perform a pause at the top of the curl.</p>
+                </div>
+            </div>
+
+            <!-- 8. Plank Hold -->
+            <div class="exercise-card bg-gray-50 p-5 rounded-lg shadow-md flex flex-col sm:flex-row items-center sm:items-start gap-4" data-exercise-id="plank-hold">
+                <div class="flex-shrink-0 w-full sm:w-48 h-32 sm:h-auto overflow-hidden rounded-md">
+                    <img src="https://placehold.co/300x200/a0c4ff/ffffff?text=Plank+Hold" alt="Person doing Plank Hold" class="w-full h-full object-cover rounded-md">
+                </div>
+                <div class="flex-grow text-center sm:text-left">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">11. Plank Hold</h2>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Working:</strong> Abs (95), Deep Core (90), Obliques (80), Lower Back (70), Shoulders (50)</p>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Difficulty:</strong> Beginner</p>
+                    <p class="text-gray-700"><strong class="text-blue-600">Duration:</strong> 2-3 sets, 45-90 sec hold</p>
+                    <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-4">
+                        <button class="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onclick="event.stopPropagation(); startExercise('plank-hold');">Start Exercise</button>
+                        <button class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75" onclick="event.stopPropagation(); toggleDetails(this.parentNode.parentNode);">Notes on Form</button>
+                    </div>
+                    <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
+                        <button class="px-3 py-1 bg-green-500 text-white text-sm font-semibold rounded-lg hover:bg-green-600" onclick="event.stopPropagation(); showVariation('plank-hold', 'easier');">Easier</button>
+                        <button class="px-3 py-1 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600" onclick="event.stopPropagation(); showVariation('plank-hold', 'harder');">Harder</button>
+                    </div>
+                </div>
+                <div class="exercise-details w-full mt-4 pt-4 border-t border-gray-200 text-left" onclick="event.stopPropagation(); toggleDetails(this.parentNode);">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Notes on Form:</h3>
+                    <p class="text-gray-600 mb-2">Forearms on floor, elbows under shoulders. Extend legs straight back, on balls of feet. Engage core (belly button to spine), squeeze glutes. Keep body straight from head to heels; avoid sagging hips or raising butt. Gaze down/slightly forward. Breathe deeply and steadily.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Equipment Needed:</h3>
+                    <p class="text-gray-600 mb-2">Mat (or gym floor)</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Benefits:</h3>
+                    <p class="text-gray-600 mb-2">Builds strong core muscles, essential for stability, posture, and preventing back pain in daily activities like lifting, bending, or sitting.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Easier Variation:</h3>
+                    <p class="text-gray-600 mb-2">Perform plank on your knees or hold for a shorter duration.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Harder Variation:</h3>
+                    <p class="text-gray-600 mb-2">Hold for a longer duration, lift one leg or arm, or perform a side plank.</p>
+                </div>
+            </div>
+
+            <!-- 9. Wall Sit (Isometric Hold) -->
+            <div class="exercise-card bg-gray-50 p-5 rounded-lg shadow-md flex flex-col sm:flex-row items-center sm:items-start gap-4" data-exercise-id="wall-sit">
+                <div class="flex-shrink-0 w-full sm:w-48 h-32 sm:h-auto overflow-hidden rounded-md">
+                    <img src="https://placehold.co/300x200/a0c4ff/ffffff?text=Wall+Sit" alt="Person doing Wall Sit" class="w-full h-full object-cover rounded-md">
+                </div>
+                <div class="flex-grow text-center sm:text-left">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">12. Wall Sit</h2>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Working:</strong> Quadriceps (100), Glutes (85), Hamstrings (70)</p>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Difficulty:</strong> Beginner</p>
+                    <p class="text-gray-700"><strong class="text-blue-600">Duration:</strong> 2-3 sets, 30-60 sec hold</p>
+                    <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-4">
+                        <button class="px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onclick="event.stopPropagation(); startExercise('wall-sit');">Start Exercise</button>
+                        <button class="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75" onclick="event.stopPropagation(); toggleDetails(this.parentNode.parentNode);">Notes on Form</button>
+                    </div>
+                    <div class="flex flex-wrap justify-center sm:justify-start gap-2 mt-2">
+                        <button class="px-3 py-1 bg-green-500 text-white text-sm font-semibold rounded-lg hover:bg-green-600" onclick="event.stopPropagation(); showVariation('wall-sit', 'easier');">Easier</button>
+                        <button class="px-3 py-1 bg-red-500 text-white text-sm font-semibold rounded-lg hover:bg-red-600" onclick="event.stopPropagation(); showVariation('wall-sit', 'harder');">Harder</button>
+                    </div>
+                </div>
+                <div class="exercise-details w-full mt-4 pt-4 border-t border-gray-200 text-left" onclick="event.stopPropagation(); toggleDetails(this.parentNode);">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Notes on Form:</h3>
+                    <p class="text-gray-600 mb-2">Back flat against wall. Slide down until knees are at 90 degrees, thighs parallel to floor. Entire back and shoulders pressed against wall. Feet flat, shoulder-width apart. Core engaged. Breathe deeply and steadily.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Equipment Needed:</h3>
+                    <p class="text-gray-600 mb-2">Wall</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Benefits:</h3>
+                    <p class="text-gray-600 mb-2">Builds incredible quadriceps endurance and strength, beneficial for activities requiring sustained leg effort like hiking, cycling, or standing for long periods.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Easier Variation:</h3>
+                    <p class="text-gray-600 mb-2">Don't go as deep (knees at >90 degrees) or hold for a shorter duration.</p>
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Harder Variation:</h3>
+                    <p class="text-gray-600 mb-2">Hold for a longer duration, hold a weight (e.g., dumbbell) in your lap, or perform a single-leg wall sit.</p>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Footer Section -->
+        <footer class="text-center mt-10 text-gray-500 text-sm">
+            <p>&copy; 2025 Slow & Isometric Routine. All rights reserved.</p>
+            <div class="flex flex-wrap justify-center gap-4 mt-4">
+                <button class="px-4 py-2 bg-purple-500 text-white font-semibold rounded-lg shadow-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-opacity-75" onclick="openTimerModal()">Timer</button>
+                <button class="px-4 py-2 bg-purple-500 text-white font-semibold rounded-lg shadow-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-opacity-75" onclick="openStopwatchModal()">Stopwatch</button>
+                <button class="px-4 py-2 bg-purple-500 text-white font-semibold rounded-lg shadow-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-opacity-75" onclick="openRepCounterModal()">Rep Counter</button>
+                <button class="px-4 py-2 bg-indigo-500 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75" onclick="openAimsModal()">Aims of This Site</button>
+                <button class="px-4 py-2 bg-green-500 text-white font-semibold rounded-lg shadow-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-opacity-75" onclick="openChecklistModal()">Workout Checklist</button>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Exercise Modal Overlay -->
+    <div id="exerciseModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="modalExerciseTitle" class="text-2xl font-bold text-gray-800 mb-4"></h2>
+            <img id="modalExerciseImage" src="" alt="Exercise Step" class="w-full max-w-sm rounded-md mb-4 object-cover h-48">
+            <p id="modalStepAction" class="modal-step-action"></p>
+            <p id="modalStepDescription" class="text-lg text-gray-700 mb-4"></p>
+            <p id="modalTimer" class="text-4xl font-extrabold text-blue-600 mb-6">00:00</p>
+            <div class="flex space-x-4">
+                <button id="prevStepBtn" class="px-6 py-3 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75" onclick="prevStep()">Previous</button>
+                <button id="pauseResumeBtn" class="px-6 py-3 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-75" onclick="togglePause()">Pause</button>
+                <button id="nextStepBtn" class="px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onclick="nextStep()">Next</button>
+            </div>
+            <button class="mt-6 px-6 py-3 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75" onclick="finishExercise()">Finish Exercise</button>
+            <div class="mt-4 flex items-center space-x-2">
+                <input type="checkbox" id="soundToggle" class="form-checkbox h-5 w-5 text-blue-600" checked onchange="toggleGlobalSound()">
+                <label for="soundToggle" class="text-gray-700">Sound On</label>
+                <select id="soundSelect" class="ml-2 p-1 border rounded" onchange="changeSoundType()">
+                    <option value="C4">Ding</option>
+                    <option value="G4">Chime</option>
+                    <option value="E4">Beep</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timer Modal -->
+    <div id="timerModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Timer</h2>
+            <input type="number" id="timerInput" class="p-2 border rounded-md w-32 text-center text-xl mb-4" placeholder="Seconds" value="30">
+            <input type="number" id="timerBeepInterval" class="p-2 border rounded-md w-32 text-center text-md mb-4" placeholder="Beep Interval (s)" value="10">
+            <p id="timerDisplay" class="text-4xl font-extrabold text-blue-600 mb-6">00:00</p>
+            <div class="flex space-x-4">
+                <button id="timerStartBtn" class="px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600" onclick="startCustomTimer()">Start</button>
+                <button id="timerPauseResumeBtn" class="px-6 py-3 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-600" onclick="toggleCustomTimerPause()">Pause</button>
+                <button id="timerResetBtn" class="px-6 py-3 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400" onclick="resetCustomTimer()">Reset</button>
+            </div>
+            <p id="timerBeepCount" class="text-md text-gray-600 mt-4"></p>
+            <button class="mt-6 px-6 py-3 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600" onclick="closeTimerModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- Stopwatch Modal -->
+    <div id="stopwatchModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Stopwatch</h2>
+            <input type="number" id="stopwatchBeepInterval" class="p-2 border rounded-md w-32 text-center text-md mb-4" placeholder="Beep Interval (s)" value="10">
+            <p id="stopwatchDisplay" class="text-4xl font-extrabold text-blue-600 mb-6">00:00</p>
+            <div class="flex space-x-4">
+                <button id="stopwatchStartBtn" class="px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600" onclick="startStopwatch()">Start</button>
+                <button id="stopwatchPauseResumeBtn" class="px-6 py-3 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-600" onclick="toggleStopwatchPause()">Pause</button>
+                <button id="stopwatchResetBtn" class="px-6 py-3 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400" onclick="resetStopwatch()">Reset</button>
+            </div>
+            <p id="stopwatchBeepCount" class="text-md text-gray-600 mt-4"></p>
+            <button class="mt-6 px-6 py-3 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600" onclick="closeStopwatchModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- Rep Counter Modal -->
+    <div id="repCounterModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Rep Counter</h2>
+            <p id="repCountDisplay" class="text-6xl font-extrabold text-blue-600 mb-6">0</p>
+            <div class="flex space-x-4">
+                <button class="px-8 py-4 bg-blue-500 text-white text-2xl font-semibold rounded-lg shadow-md hover:bg-blue-600" onclick="incrementRep()">+</button>
+                <button class="px-8 py-4 bg-red-500 text-white text-2xl font-semibold rounded-lg shadow-md hover:bg-red-600" onclick="resetRepCount()">Reset</button>
+            </div>
+            <button class="mt-6 px-6 py-3 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600" onclick="closeRepCounterModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- Aims of This Site Modal -->
+    <div id="aimsModal" class="modal-overlay">
+        <div class="modal-content text-left">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Aims of This Site</h2>
+            <ul class="list-disc list-inside text-gray-700 space-y-2">
+                <li>Provide a full-body slow movement and isometric gym routine.</li>
+                <li>Offer detailed form tips and muscle engagement for each exercise.</li>
+                <li>Include equipment needed and benefits for daily life.</li>
+                <li>Feature easier and harder variations for each exercise.</li>
+                <li>Guide users through exercises with per-rep timings and visual cues.</li>
+                <li>Incorporate sound cues at the end of timers.</li>
+                <li>Allow pausing/resuming exercise timers.</li>
+                <li>Provide global sound on/off and sound type selection.</li>
+                <li>Include separate Timer, Stopwatch, and Rep Counter tools.</li>
+                <li>Enable regular beep intervals for Timer and Stopwatch, with beep count at end.</li>
+                <li>Display difficulty ratings for each exercise.</li>
+                <li>Offer a draggable Notes modal for personal notes.</li>
+                <li>Feature a Workout Checklist to track completed exercises.</li>
+                <li>Visually highlight worked muscles and their fatigue levels in the checklist.</li>
+                <li>Recommend exercises to target underworked muscles based on fatigue.</li>
+            </ul>
+            <button class="mt-6 px-6 py-3 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600" onclick="closeAimsModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- Workout Checklist Modal -->
+    <div id="checklistModal" class="modal-overlay">
+        <div class="modal-content text-left">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Workout Checklist</h2>
+            <div class="mb-4 w-full">
+                <h3 class="text-xl font-semibold text-blue-700 mb-2">Muscle Fatigue Overview (0-100%):</h3>
+                <div id="muscleFatigueOverview" class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm">
+                    <!-- Muscle fatigue bars will be injected here -->
+                </div>
+            </div>
+            <div class="mb-6 w-full">
+                <h3 class="text-xl font-semibold text-blue-700 mb-2">Recommended Exercises:</h3>
+                <ul id="recommendedExercises" class="list-disc list-inside text-gray-700 space-y-1">
+                    <!-- Recommended exercises will be injected here -->
+                </ul>
+            </div>
+            <div id="checklistExercises" class="w-full space-y-2">
+                <!-- Checklist items will be injected here -->
+            </div>
+            <button class="mt-6 px-6 py-3 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600" onclick="closeChecklistModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- Draggable Notes Modal -->
+    <div id="notesModal" class="notes-modal-overlay">
+        <div id="notesModalContent" class="notes-modal-content">
+            <div id="notesModalHeader" class="notes-modal-header">
+                <h3 class="text-lg font-semibold">My Notes</h3>
+                <button class="text-white hover:text-gray-200" onclick="closeNotesModal()">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="notes-modal-body">
+                <textarea id="notesTextarea" placeholder="Write your workout notes here..."></textarea>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // --- Global State & Data ---
+        const exerciseData = {
+            'leg-press-slow-reps': {
+                title: 'Leg Press (Slow Reps)',
+                equipment: 'Leg Press Machine',
+                difficulty: 'Intermediate',
+                musclesWorked: [
+                    { name: 'Quadriceps', intensity: 90, layman: 'Front of Thighs' },
+                    { name: 'Glutes', intensity: 85, layman: 'Buttocks' },
+                    { name: 'Hamstrings', intensity: 60, layman: 'Back of Thighs' }
+                ],
+                benefits: 'Strengthens major leg muscles, improving walking, climbing stairs, and overall lower body power for daily activities.',
+                easierVariation: 'Use less weight or perform bodyweight squats with a slow tempo.',
+                harderVariation: 'Increase weight, increase the lowering/pressing time to 6-8 seconds, or perform single-leg presses.',
+                steps: [
+                    { text: 'Prepare: Adjust seat, load weight, feet on plate. Ensure proper back support.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Leg+Press+Setup' },
+                    { text: 'Get ready for Rep 1!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+1+Start' },
+                    { action: 'LOWER', text: 'Rep 1: Slowly lower the weight for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Leg+Press+Lower' },
+                    { action: 'PRESS', text: 'Rep 1: Slowly press the weight up for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Leg+Press+Press' },
+                    { text: 'Get ready for Rep 2!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+2+Start' },
+                    { action: 'LOWER', text: 'Rep 2: Slowly lower the weight for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Leg+Press+Lower' },
+                    { action: 'PRESS', text: 'Rep 2: Slowly press the weight up for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Leg+Press+Press' },
+                    { text: 'Get ready for Rep 3!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+3+Start' },
+                    { action: 'LOWER', text: 'Rep 3: Slowly lower the weight for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Leg+Press+Lower' },
+                    { action: 'PRESS', text: 'Rep 3: Slowly press the weight up for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Leg+Press+Press' },
+                    { text: 'Set complete! Rest for 60-90 seconds before your next set.', duration: 75, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rest' }
+                ]
+            },
+            'leg-press-hold': {
+                title: 'Leg Press (Isometric Hold)',
+                equipment: 'Leg Press Machine',
+                difficulty: 'Intermediate',
+                musclesWorked: [
+                    { name: 'Quadriceps', intensity: 95, layman: 'Front of Thighs' },
+                    { name: 'Glutes', intensity: 90, layman: 'Buttocks' },
+                    { name: 'Hamstrings', intensity: 65, layman: 'Back of Thighs' }
+                ],
+                benefits: 'Builds static strength and endurance in the legs, beneficial for holding positions, improving stability, and reducing joint stress.',
+                easierVariation: 'Use less weight or hold for a shorter duration. Perform a wall sit for a similar bodyweight isometric.',
+                harderVariation: 'Increase weight or hold for a longer duration. Perform a single-leg isometric hold.',
+                steps: [
+                    { text: 'Prepare: Adjust seat, load weight, feet on plate. Ensure proper back support.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Leg+Press+Setup' },
+                    { action: 'HOLD', text: 'Lower to 90 degrees and HOLD for 30-45 seconds. Feel the burn!', duration: 35, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Leg+Press+Hold' },
+                    { text: 'Set complete! Rest for 60-90 seconds before your next set.', duration: 75, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rest' }
+                ]
+            },
+            'goblet-squat-slow-reps': {
+                title: 'Goblet Squat (Slow Reps)',
+                equipment: 'Kettlebell or Dumbbell',
+                difficulty: 'Beginner',
+                musclesWorked: [
+                    { name: 'Quadriceps', intensity: 80, layman: 'Front of Thighs' },
+                    { name: 'Glutes', intensity: 75, layman: 'Buttocks' },
+                    { name: 'Hamstrings', intensity: 60, layman: 'Back of Thighs' },
+                    { name: 'Core', intensity: 70, layman: 'Abs & Lower Back' }
+                ],
+                benefits: 'Improves functional strength for lifting and bending, enhances core stability, and builds strong legs for everyday movements.',
+                easierVariation: 'Use a lighter weight or perform bodyweight squats (wall sit for isometric).',
+                harderVariation: 'Increase weight, increase tempo time, or perform a pause squat at the bottom.',
+                steps: [
+                    { text: 'Prepare: Stand with feet slightly wider than shoulder-width, hold kettlebell/dumbbell at chest.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Goblet+Squat+Setup' },
+                    { text: 'Get ready for Rep 1!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+1+Start' },
+                    { action: 'LOWER', text: 'Rep 1: Slowly lower into a squat for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Goblet+Squat+Lower' },
+                    { action: 'STAND', text: 'Rep 1: Slowly stand up for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Goblet+Squat+Stand' },
+                    { text: 'Get ready for Rep 2!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+2+Start' },
+                    { action: 'LOWER', text: 'Rep 2: Slowly lower into a squat for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Goblet+Squat+Lower' },
+                    { action: 'STAND', text: 'Rep 2: Slowly stand up for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Goblet+Squat+Stand' },
+                    { text: 'Get ready for Rep 3!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+3+Start' },
+                    { action: 'LOWER', text: 'Rep 3: Slowly lower into a squat for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Goblet+Squat+Lower' },
+                    { action: 'STAND', text: 'Rep 3: Slowly stand up for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Goblet+Squat+Stand' },
+                    { text: 'Set complete! Rest for 60-90 seconds before your next set.', duration: 75, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rest' }
+                ]
+            },
+            'multi-press-slow-reps': {
+                title: 'Multi-Press (Slow Reps)',
+                equipment: 'Multi-Press Machine',
+                difficulty: 'Intermediate',
+                musclesWorked: [
+                    { name: 'Chest', intensity: 90, layman: 'Chest' },
+                    { name: 'Front Shoulders', intensity: 70, layman: 'Front of Shoulders' },
+                    { name: 'Triceps', intensity: 80, layman: 'Back of Upper Arms' }
+                ],
+                benefits: 'Builds pushing strength for everyday tasks like pushing open heavy doors or lifting objects overhead. Improves upper body posture.',
+                easierVariation: 'Use less weight or perform slow push-ups on your knees.',
+                harderVariation: 'Increase weight, increase tempo time, or perform a pause at the bottom of the press.',
+                steps: [
+                    { text: 'Prepare: Adjust seat for handles at mid-chest. Sit with back firm, feet flat.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Multi-Press+Setup' },
+                    { text: 'Get ready for Rep 1!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+1+Start' },
+                    { action: 'PRESS', text: 'Rep 1: Slowly press handles away for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Multi-Press+Press' },
+                    { action: 'RETURN', text: 'Rep 1: Slowly return handles for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Multi-Press+Return' },
+                    { text: 'Get ready for Rep 2!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+2+Start' },
+                    { action: 'PRESS', text: 'Rep 2: Slowly press handles away for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Multi-Press+Press' },
+                    { action: 'RETURN', text: 'Rep 2: Slowly return handles for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Multi-Press+Return' },
+                    { text: 'Get ready for Rep 3!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+3+Start' },
+                    { action: 'PRESS', text: 'Rep 3: Slowly press handles away for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Multi-Press+Press' },
+                    { action: 'RETURN', text: 'Rep 3: Slowly return handles for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Multi-Press+Return' },
+                    { text: 'Set complete! Rest for 60-90 seconds before your next set.', duration: 75, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rest' }
+                ]
+            },
+            'lat-pulldown-slow-reps': {
+                title: 'Lat Pulldown (Slow Reps)',
+                equipment: 'Lat Pulldown Machine',
+                difficulty: 'Intermediate',
+                musclesWorked: [
+                    { name: 'Lats', intensity: 90, layman: 'Sides of Back' },
+                    { name: 'Biceps', intensity: 75, layman: 'Front of Upper Arms' },
+                    { name: 'Mid-Upper Back', intensity: 60, layman: 'Mid-Upper Back' }
+                ],
+                benefits: 'Strengthens back muscles crucial for pulling, improving posture, and making tasks like opening heavy doors or carrying groceries easier.',
+                easierVariation: 'Use less weight or perform slow tempo resistance band pulldowns.',
+                harderVariation: 'Increase weight, increase tempo time, or perform a pause at the bottom of the pull.',
+                steps: [
+                    { text: 'Prepare: Secure thighs under pad. Grasp bar overhand, slightly wider than shoulder-width.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lat+Pulldown+Setup' },
+                    { text: 'Get ready for Rep 1!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+1+Start' },
+                    { action: 'PULL', text: 'Rep 1: Slowly pull the bar down for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lat+Pulldown+Pull' },
+                    { action: 'RELEASE', text: 'Rep 1: Slowly release the bar up for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lat+Pulldown+Release' },
+                    { text: 'Get ready for Rep 2!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+2+Start' },
+                    { action: 'PULL', text: 'Rep 2: Slowly pull the bar down for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lat+Pulldown+Pull' },
+                    { action: 'RELEASE', text: 'Rep 2: Slowly release the bar up for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lat+Pulldown+Release' },
+                    { text: 'Get ready for Rep 3!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+3+Start' },
+                    { action: 'PULL', text: 'Rep 3: Slowly pull the bar down for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lat+Pulldown+Pull' },
+                    { action: 'RELEASE', text: 'Rep 3: Slowly release the bar up for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lat+Pulldown+Release' },
+                    { text: 'Set complete! Rest for 60-90 seconds before your next set.', duration: 75, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rest' }
+                ]
+            },
+            'lat-pulldown-hold': {
+                title: 'Lat Pulldown (Isometric Hold)',
+                equipment: 'Lat Pulldown Machine',
+                difficulty: 'Intermediate',
+                musclesWorked: [
+                    { name: 'Lats', intensity: 95, layman: 'Sides of Back' },
+                    { name: 'Biceps', intensity: 80, layman: 'Front of Upper Arms' },
+                    { name: 'Mid-Upper Back', intensity: 65, layman: 'Mid-Upper Back' }
+                ],
+                benefits: 'Builds static strength and endurance in the back, improving grip strength and stability for tasks requiring sustained pulling or holding.',
+                easierVariation: 'Use less weight or hold for a shorter duration. Perform a dead hang from a pull-up bar for a similar isometric.',
+                harderVariation: 'Increase weight or hold for a longer duration. Perform a flexed-arm hang from a pull-up bar.',
+                steps: [
+                    { text: 'Prepare: Secure thighs under pad. Grasp bar overhand, slightly wider than shoulder-width.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lat+Pulldown+Setup' },
+                    { action: 'HOLD', text: 'Pull bar to upper chest and HOLD for 20-30 seconds. Squeeze your lats.', duration: 25, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lat+Pulldown+Hold' },
+                    { text: 'Set complete! Rest for 60-90 seconds before your next set.', duration: 75, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rest' }
+                ]
+            },
+            'cable-fly-hold': {
+                title: 'Cable Fly (Isometric Hold)',
+                equipment: 'Cable Crossover Machine',
+                difficulty: 'Intermediate',
+                musclesWorked: [
+                    { name: 'Chest', intensity: 95, layman: 'Chest' },
+                    { name: 'Front Shoulders', intensity: 60, layman: 'Front of Shoulders' }
+                ],
+                benefits: 'Develops static strength in the chest, improving stability for pushing movements and enhancing muscle definition.',
+                easierVariation: 'Use less weight or hold for a shorter duration. Perform an isometric push-up hold against a wall.',
+                harderVariation: 'Increase weight or hold for a longer duration. Perform a tighter squeeze or a single-arm hold.',
+                steps: [
+                    { text: 'Prepare: Set pulleys to shoulder height. Stand in center, handles in each hand, slight elbow bend.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Cable+Fly+Setup' },
+                    { action: 'HOLD', text: 'Bring hands together in a wide arc in front of chest. HOLD for 20-30 seconds. Squeeze pectorals hard.', duration: 25, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Cable+Fly+Hold' },
+                    { text: 'Set complete! Rest for 60 seconds before your next set.', duration: 60, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rest' }
+                ]
+            },
+            'lateral-raise-slow-reps': {
+                title: 'Dumbbell Lateral Raise (Slow Reps)',
+                equipment: 'Dumbbells',
+                difficulty: 'Intermediate',
+                musclesWorked: [
+                    { name: 'Side Shoulders', intensity: 90, layman: 'Side of Shoulders' },
+                    { name: 'Front Shoulders', intensity: 50, layman: 'Front of Shoulders' },
+                    { name: 'Rear Shoulders', intensity: 30, layman: 'Rear of Shoulders' }
+                ],
+                benefits: 'Builds wider, stronger shoulders, improving stability for overhead movements and enhancing the appearance of your upper body.',
+                easierVariation: 'Use lighter dumbbells or perform single-arm raises.',
+                harderVariation: 'Increase weight, increase tempo time, or perform a pause at the top of the raise.',
+                steps: [
+                    { text: 'Prepare: Stand tall, slight knee bend. Hold light dumbbells by sides, slight elbow bend.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lateral+Raise+Setup' },
+                    { text: 'Get ready for Rep 1!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+1+Start' },
+                    { action: 'RAISE', text: 'Rep 1: Slowly raise dumbbells out to sides for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lateral+Raise+Raise' },
+                    { action: 'LOWER', text: 'Rep 1: Slowly lower dumbbells for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lateral+Raise+Lower' },
+                    { text: 'Get ready for Rep 2!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+2+Start' },
+                    { action: 'RAISE', text: 'Rep 2: Slowly raise dumbbells out to sides for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lateral+Raise+Raise' },
+                    { action: 'LOWER', text: 'Rep 2: Slowly lower dumbbells for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lateral+Raise+Lower' },
+                    { text: 'Get ready for Rep 3!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+3+Start' },
+                    { action: 'RAISE', text: 'Rep 3: Slowly raise dumbbells out to sides for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lateral+Raise+Raise' },
+                    { action: 'LOWER', text: 'Rep 3: Slowly lower dumbbells for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lateral+Raise+Lower' },
+                    { text: 'Set complete! Rest for 60 seconds before your next set.', duration: 60, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rest' }
+                ]
+            },
+            'lateral-raise-hold': {
+                title: 'Dumbbell Lateral Raise (Isometric Hold)',
+                equipment: 'Dumbbells',
+                difficulty: 'Intermediate',
+                musclesWorked: [
+                    { name: 'Side Shoulders', intensity: 95, layman: 'Side of Shoulders' },
+                    { name: 'Front Shoulders', intensity: 65, layman: 'Front of Shoulders' },
+                    { name: 'Rear Shoulders', intensity: 35, layman: 'Rear of Shoulders' }
+                ],
+                benefits: 'Develops static strength in the side shoulders, improving shoulder stability and endurance for carrying objects or maintaining arm positions.',
+                easierVariation: 'Use lighter dumbbells or hold for a shorter duration. Perform a wall-assisted lateral raise hold.',
+                harderVariation: 'Increase weight or hold for a longer duration. Perform a single-arm lateral raise hold.',
+                steps: [
+                    { text: 'Prepare: Stand tall, slight knee bend. Hold light dumbbells by sides, slight elbow bend.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lateral+Raise+Setup' },
+                    { action: 'HOLD', text: 'Raise dumbbells to shoulder height and HOLD for 15-25 seconds.', duration: 20, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lateral+Raise+Hold' },
+                    { text: 'Set complete! Rest for 60 seconds before your next set.', duration: 60, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rest' }
+                ]
+            },
+            'bicep-curl-slow-reps': {
+                title: 'Cable Bicep Curl (Slow Reps)',
+                equipment: 'Cable Crossover Machine (with bar/rope attachment)',
+                difficulty: 'Beginner',
+                musclesWorked: [
+                    { name: 'Biceps', intensity: 90, layman: 'Front of Upper Arms' },
+                    { name: 'Forearms', intensity: 60, layman: 'Forearms' }
+                ],
+                benefits: 'Strengthens arm muscles for lifting, carrying, and pulling objects. Improves arm definition and overall upper body strength.',
+                easierVariation: 'Use less weight or perform slow tempo dumbbell curls.',
+                harderVariation: 'Increase weight, increase tempo time, or perform a pause at the top of the curl.',
+                steps: [
+                    { text: 'Prepare: Stand facing low pulley. Grasp bar/rope underhand, elbows tucked.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Bicep+Curl+Setup' },
+                    { text: 'Get ready for Rep 1!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+1+Start' },
+                    { action: 'CURL', text: 'Rep 1: Slowly curl the bar up for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Bicep+Curl+Curl' },
+                    { action: 'LOWER', text: 'Rep 1: Slowly lower the bar for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Bicep+Curl+Lower' },
+                    { text: 'Get ready for Rep 2!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+2+Start' },
+                    { action: 'CURL', text: 'Rep 2: Slowly curl the bar up for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Bicep+Curl+Curl' },
+                    { action: 'LOWER', text: 'Rep 2: Slowly lower the bar for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Bicep+Curl+Lower' },
+                    { text: 'Get ready for Rep 3!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+3+Start' },
+                    { action: 'CURL', text: 'Rep 3: Slowly curl the bar up for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Bicep+Curl+Curl' },
+                    { action: 'LOWER', text: 'Rep 3: Slowly lower the bar for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Bicep+Curl+Lower' },
+                    { text: 'Set complete! Rest for 60 seconds before your next set.', duration: 60, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rest' }
+                ]
+            },
+            'plank-hold': {
+                title: 'Plank Hold',
+                equipment: 'Mat (or gym floor)',
+                difficulty: 'Beginner',
+                musclesWorked: [
+                    { name: 'Abs', intensity: 95, layman: 'Abdominals' },
+                    { name: 'Deep Core', intensity: 90, layman: 'Deep Core Muscles' },
+                    { name: 'Obliques', intensity: 80, layman: 'Side Abdominals' },
+                    { name: 'Lower Back', intensity: 70, layman: 'Lower Back' },
+                    { name: 'Shoulders', intensity: 50, layman: 'Shoulders' }
+                ],
+                benefits: 'Builds strong core muscles, essential for stability, posture, and preventing back pain in daily activities like lifting, bending, or sitting.',
+                easierVariation: 'Perform plank on your knees or hold for a shorter duration.',
+                harderVariation: 'Hold for a longer duration, lift one leg or arm, or perform a side plank.',
+                steps: [
+                    { text: 'Prepare: Forearms on floor, elbows under shoulders. Extend legs straight back.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Plank+Setup' },
+                    { action: 'HOLD', text: 'HOLD for 45-90 seconds. Engage core, squeeze glutes. Keep body straight from head to heels.', duration: 60, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Plank+Hold' },
+                    { text: 'Set complete! Rest for 60 seconds before your next set.', duration: 60, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rest' }
+                ]
+            },
+            'wall-sit': {
+                title: 'Wall Sit',
+                equipment: 'Wall',
+                difficulty: 'Beginner',
+                musclesWorked: [
+                    { name: 'Quadriceps', intensity: 100, layman: 'Front of Thighs' },
+                    { name: 'Glutes', intensity: 85, layman: 'Buttocks' },
+                    { name: 'Hamstrings', intensity: 70, layman: 'Back of Thighs' }
+                ],
+                benefits: 'Builds incredible quadriceps endurance and strength, beneficial for activities requiring sustained leg effort like hiking, cycling, or standing for long periods.',
+                easierVariation: 'Don\'t go as deep (knees at >90 degrees) or hold for a shorter duration.',
+                harderVariation: 'Hold for a longer duration, hold a weight (e.g., dumbbell) in your lap, or perform a single-leg wall sit.',
+                steps: [
+                    { text: 'Prepare: Back flat against wall. Slide down until knees are at 90 degrees, thighs parallel to floor.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Wall+Sit+Setup' },
+                    { action: 'HOLD', text: 'HOLD for 30-60 seconds. Keep entire back pressed against wall. Core engaged.', duration: 45, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Wall+Sit+Hold' },
+                    { text: 'Set complete! Rest for 60 seconds before your next set.', duration: 60, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rest' }
+                ]
+            }
+        };
+
+        // --- Global Variables for Modals & Timers ---
+        let currentExerciseId = null;
+        let currentStepIndex = 0;
+        let exerciseTimerInterval = null;
+        let timeRemaining = 0;
+        let isPaused = false;
+        let globalSoundEnabled = true;
+        let currentSoundType = 'C4'; // Default sound
+
+        let customTimerInterval = null;
+        let customTimerTimeRemaining = 0;
+        let customTimerIsPaused = false;
+        let customTimerBeepCount = 0;
+        let customTimerLastBeepTime = 0;
+
+        let stopwatchInterval = null;
+        let stopwatchElapsedTime = 0;
+        let stopwatchIsPaused = false;
+        let stopwatchBeepCount = 0;
+        let stopwatchLastBeepTime = 0;
+
+        let repCount = 0;
+
+        // Tone.js setup for sound effect
+        const synth = new Tone.MembraneSynth().toDestination();
+
+        // --- DOM Elements ---
+        const modal = document.getElementById('exerciseModal');
+        const modalTitle = document.getElementById('modalExerciseTitle');
+        const modalImage = document.getElementById('modalExerciseImage');
+        const modalStepAction = document.getElementById('modalStepAction');
+        const modalDescription = document.getElementById('modalStepDescription');
+        const modalTimer = document.getElementById('modalTimer');
+        const prevStepBtn = document.getElementById('prevStepBtn');
+        const pauseResumeBtn = document.getElementById('pauseResumeBtn');
+        const nextStepBtn = document.getElementById('nextStepBtn');
+        const soundToggle = document.getElementById('soundToggle');
+        const soundSelect = document.getElementById('soundSelect');
+
+        const timerModal = document.getElementById('timerModal');
+        const timerInput = document.getElementById('timerInput');
+        const timerBeepIntervalInput = document.getElementById('timerBeepInterval');
+        const timerDisplay = document.getElementById('timerDisplay');
+        const timerPauseResumeBtn = document.getElementById('timerPauseResumeBtn');
+        const timerBeepCountDisplay = document.getElementById('timerBeepCount');
+
+        const stopwatchModal = document.getElementById('stopwatchModal');
+        const stopwatchBeepIntervalInput = document.getElementById('stopwatchBeepInterval');
+        const stopwatchDisplay = document.getElementById('stopwatchDisplay');
+        const stopwatchPauseResumeBtn = document.getElementById('stopwatchPauseResumeBtn');
+        const stopwatchBeepCountDisplay = document.getElementById('stopwatchBeepCount');
+
+        const repCounterModal = document.getElementById('repCounterModal');
+        const repCountDisplay = document.getElementById('repCountDisplay');
+
+        const aimsModal = document.getElementById('aimsModal');
+        const checklistModal = document.getElementById('checklistModal');
+        const muscleFatigueOverview = document.getElementById('muscleFatigueOverview');
+        const recommendedExercisesList = document.getElementById('recommendedExercises');
+        const checklistExercisesDiv = document.getElementById('checklistExercises');
+
+        const notesModal = document.getElementById('notesModal');
+        const notesModalContent = document.getElementById('notesModalContent');
+        const notesModalHeader = document.getElementById('notesModalHeader');
+        const notesTextarea = document.getElementById('notesTextarea');
+
+        // --- Initial Setup ---
+        // Ensure general info is collapsed on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const generalInfoContent = document.getElementById('generalInfoContent');
+            const generalInfoToggleIcon = document.getElementById('generalInfoToggleIcon');
+            if (generalInfoContent && generalInfoToggleIcon) {
+                generalInfoContent.classList.remove('expanded');
+                generalInfoToggleIcon.classList.remove('expanded');
+            }
+            populateChecklist();
+            updateMuscleFatigueOverview(); // Initialize muscle fatigue display
+        });
+
+        // --- Helper Functions ---
+        function playSound() {
+            if (globalSoundEnabled) {
+                synth.triggerAttackRelease(currentSoundType, '8n');
+            }
+        }
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSeconds = seconds % 60;
+            return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+        }
+
+        // --- General Info Toggle ---
+        function toggleGeneralInfo() {
+            const content = document.getElementById('generalInfoContent');
+            const icon = document.getElementById('generalInfoToggleIcon');
+            content.classList.toggle('expanded');
+            icon.classList.toggle('expanded');
+        }
+
+        // --- Exercise Modal Functions ---
+        function toggleDetails(cardElement) {
+            const details = cardElement.querySelector('.exercise-details');
+            if (details) {
+                details.classList.toggle('expanded');
+            }
+        }
+
+        function showVariation(exerciseId, type) {
+            const exercise = exerciseData[exerciseId];
+            let message = '';
+            if (type === 'easier' && exercise.easierVariation) {
+                message = `Easier Variation: ${exercise.easierVariation}`;
+            } else if (type === 'harder' && exercise.harderVariation) {
+                message = `Harder Variation: ${exercise.harderVariation}`;
+            } else {
+                message = 'No specific variation available for this exercise.';
+            }
+            // Use a simple alert-like message box since alert() is disallowed
+            alert(message); // Using alert for simplicity, could be a custom modal
+        }
+
+        function startExercise(exerciseId) {
+            currentExerciseId = exerciseId;
+            currentStepIndex = 0;
+            isPaused = false;
+            pauseResumeBtn.textContent = 'Pause';
+            modal.classList.add('active');
+            displayStep();
+        }
+
+        function displayStep() {
+            clearInterval(exerciseTimerInterval);
+
+            const exercise = exerciseData[currentExerciseId];
+            if (!exercise || !exercise.steps[currentStepIndex]) {
+                finishExercise();
+                return;
+            }
+
+            const step = exercise.steps[currentStepIndex];
+
+            modalTitle.textContent = exercise.title;
+            modalImage.src = step.img || 'https://placehold.co/300x200/cccccc/333333?text=No+Image';
+            modalDescription.textContent = step.text;
+
+            if (step.action) {
+                modalStepAction.textContent = step.action;
+                modalStepAction.style.display = 'block';
+            } else {
+                modalStepAction.textContent = '';
+                modalStepAction.style.display = 'none';
+            }
+
+            prevStepBtn.disabled = currentStepIndex === 0;
+
+            if (step.duration > 0) {
+                timeRemaining = step.duration;
+                updateExerciseTimerDisplay();
+                if (!isPaused) {
+                    exerciseTimerInterval = setInterval(() => {
+                        timeRemaining--;
+                        updateExerciseTimerDisplay();
+                        if (timeRemaining <= 0) {
+                            clearInterval(exerciseTimerInterval);
+                            playSound();
+                            nextStep();
+                        }
+                    }, 1000);
+                }
+            } else {
+                modalTimer.textContent = 'User Paced';
+            }
+        }
+
+        function updateExerciseTimerDisplay() {
+            modalTimer.textContent = formatTime(timeRemaining);
+        }
+
+        function nextStep() {
+            currentStepIndex++;
+            if (currentStepIndex < exerciseData[currentExerciseId].steps.length) {
+                displayStep();
+            } else {
+                finishExercise();
+            }
+        }
+
+        function prevStep() {
+            currentStepIndex--;
+            if (currentStepIndex >= 0) {
+                displayStep();
+            } else {
+                currentStepIndex = 0;
+            }
+        }
+
+        function togglePause() {
+            isPaused = !isPaused;
+            if (isPaused) {
+                clearInterval(exerciseTimerInterval);
+                pauseResumeBtn.textContent = 'Resume';
+            } else {
+                pauseResumeBtn.textContent = 'Pause';
+                displayStep();
+            }
+        }
+
+        function finishExercise() {
+            clearInterval(exerciseTimerInterval);
+            modal.classList.remove('active');
+            currentExerciseId = null;
+            currentStepIndex = 0;
+            timeRemaining = 0;
+            isPaused = false;
+            modalStepAction.textContent = '';
+            modalStepAction.style.display = 'none';
+        }
+
+        function toggleGlobalSound() {
+            globalSoundEnabled = soundToggle.checked;
+        }
+
+        function changeSoundType() {
+            currentSoundType = soundSelect.value;
+        }
+
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                finishExercise();
+            }
+        });
+
+        // --- Custom Timer Modal Functions ---
+        function openTimerModal() {
+            timerModal.classList.add('active');
+            resetCustomTimer();
+        }
+
+        function closeTimerModal() {
+            timerModal.classList.remove('active');
+            resetCustomTimer();
+        }
+
+        function startCustomTimer() {
+            if (customTimerInterval) return; // Prevent multiple intervals
+
+            const duration = parseInt(timerInput.value);
+            if (isNaN(duration) || duration <= 0) {
+                alert('Please enter a valid duration for the timer.');
+                return;
+            }
+
+            if (!customTimerIsPaused) {
+                customTimerTimeRemaining = duration;
+                customTimerBeepCount = 0;
+                customTimerLastBeepTime = duration;
+            }
+            customTimerIsPaused = false;
+            timerPauseResumeBtn.textContent = 'Pause';
+            timerBeepCountDisplay.textContent = '';
+
+            customTimerInterval = setInterval(() => {
+                customTimerTimeRemaining--;
+                timerDisplay.textContent = formatTime(customTimerTimeRemaining);
+
+                const beepInterval = parseInt(timerBeepIntervalInput.value);
+                if (!isNaN(beepInterval) && beepInterval > 0 && customTimerTimeRemaining % beepInterval === 0 && customTimerTimeRemaining > 0) {
+                    playSound();
+                    customTimerBeepCount++;
+                }
+
+                if (customTimerTimeRemaining <= 0) {
+                    clearInterval(customTimerInterval);
+                    playSound();
+                    customTimerBeepCount++; // Count final beep
+                    timerDisplay.textContent = '00:00';
+                    timerBeepCountDisplay.textContent = `Timer finished! ${customTimerBeepCount} beeps.`;
+                    customTimerInterval = null; // Allow starting again
+                }
+            }, 1000);
+        }
+
+        function toggleCustomTimerPause() {
+            customTimerIsPaused = !customTimerIsPaused;
+            if (customTimerIsPaused) {
+                clearInterval(customTimerInterval);
+                timerPauseResumeBtn.textContent = 'Resume';
+            } else {
+                timerPauseResumeBtn.textContent = 'Pause';
+                startCustomTimer(); // Resume timer
+            }
+        }
+
+        function resetCustomTimer() {
+            clearInterval(customTimerInterval);
+            customTimerInterval = null;
+            customTimerTimeRemaining = 0;
+            customTimerIsPaused = false;
+            customTimerBeepCount = 0;
+            customTimerLastBeepTime = 0;
+            timerDisplay.textContent = '00:00';
+            timerPauseResumeBtn.textContent = 'Pause';
+            timerBeepCountDisplay.textContent = '';
+            timerInput.value = '30'; // Reset input to default
+            timerBeepIntervalInput.value = '10'; // Reset input to default
+        }
+
+        timerModal.addEventListener('click', (event) => {
+            if (event.target === timerModal) {
+                closeTimerModal();
+            }
+        });
+
+        // --- Stopwatch Modal Functions ---
+        function openStopwatchModal() {
+            stopwatchModal.classList.add('active');
+            resetStopwatch();
+        }
+
+        function closeStopwatchModal() {
+            stopwatchModal.classList.remove('active');
+            resetStopwatch();
+        }
+
+        function startStopwatch() {
+            if (stopwatchInterval) return; // Prevent multiple intervals
+
+            stopwatchIsPaused = false;
+            stopwatchPauseResumeBtn.textContent = 'Pause';
+            stopwatchBeepCountDisplay.textContent = '';
+
+            stopwatchInterval = setInterval(() => {
+                stopwatchElapsedTime++;
+                stopwatchDisplay.textContent = formatTime(stopwatchElapsedTime);
+
+                const beepInterval = parseInt(stopwatchBeepIntervalInput.value);
+                if (!isNaN(beepInterval) && beepInterval > 0 && stopwatchElapsedTime % beepInterval === 0) {
+                    playSound();
+                    stopwatchBeepCount++;
+                }
+            }, 1000);
+        }
+
+        function toggleStopwatchPause() {
+            stopwatchIsPaused = !stopwatchIsPaused;
+            if (stopwatchIsPaused) {
+                clearInterval(stopwatchInterval);
+                stopwatchPauseResumeBtn.textContent = 'Resume';
+                stopwatchBeepCountDisplay.textContent = `Stopwatch paused. ${stopwatchBeepCount} beeps so far.`;
+            } else {
+                stopwatchPauseResumeBtn.textContent = 'Pause';
+                stopwatchBeepCountDisplay.textContent = '';
+                startStopwatch(); // Resume stopwatch
+            }
+        }
+
+        function resetStopwatch() {
+            clearInterval(stopwatchInterval);
+            stopwatchInterval = null;
+            stopwatchElapsedTime = 0;
+            stopwatchIsPaused = false;
+            stopwatchBeepCount = 0;
+            stopwatchLastBeepTime = 0;
+            stopwatchDisplay.textContent = '00:00';
+            stopwatchPauseResumeBtn.textContent = 'Start'; // Reset to Start
+            stopwatchBeepCountDisplay.textContent = '';
+            stopwatchBeepIntervalInput.value = '10'; // Reset input to default
+        }
+
+        stopwatchModal.addEventListener('click', (event) => {
+            if (event.target === stopwatchModal) {
+                closeStopwatchModal();
+            }
+        });
+
+        // --- Rep Counter Modal Functions ---
+        function openRepCounterModal() {
+            repCounterModal.classList.add('active');
+            repCountDisplay.textContent = repCount.toString();
+        }
+
+        function closeRepCounterModal() {
+            repCounterModal.classList.remove('active');
+        }
+
+        function incrementRep() {
+            repCount++;
+            repCountDisplay.textContent = repCount.toString();
+            playSound(); // Beep on each rep increment
+        }
+
+        function resetRepCount() {
+            repCount = 0;
+            repCountDisplay.textContent = repCount.toString();
+        }
+
+        repCounterModal.addEventListener('click', (event) => {
+            if (event.target === repCounterModal) {
+                closeRepCounterModal();
+            }
+        });
+
+        // --- Aims Modal Functions ---
+        function openAimsModal() {
+            aimsModal.classList.add('active');
+        }
+
+        function closeAimsModal() {
+            aimsModal.classList.remove('active');
+        }
+
+        aimsModal.addEventListener('click', (event) => {
+            if (event.target === aimsModal) {
+                closeAimsModal();
+            }
+        });
+
+        // --- Workout Checklist Modal Functions ---
+        // Store the overall fatigue for each muscle
+        const muscleFatigue = {};
+        const allMuscles = new Set(); // To collect all unique muscle names
+
+        // Initialize muscle fatigue to 0 and collect all unique muscles
+        for (const id in exerciseData) {
+            exerciseData[id].musclesWorked.forEach(muscle => {
+                const muscleName = muscle.name.toLowerCase();
+                if (!muscleFatigue[muscleName]) {
+                    muscleFatigue[muscleName] = 0;
+                }
+                allMuscles.add(muscleName);
+            });
+        }
+
+        function openChecklistModal() {
+            populateChecklist();
+            updateMuscleFatigueOverview();
+            recommendExercises();
+            checklistModal.classList.add('active');
+        }
+
+        function closeChecklistModal() {
+            checklistModal.classList.remove('active');
+        }
+
+        function populateChecklist() {
+            checklistExercisesDiv.innerHTML = ''; // Clear previous list
+            for (const id in exerciseData) {
+                const exercise = exerciseData[id];
+                const checkboxId = `checklist-${id}`;
+                const div = document.createElement('div');
+                div.className = 'flex items-center space-x-2 p-2 bg-gray-100 rounded-md shadow-sm';
+                div.innerHTML = `
+                    <input type="checkbox" id="${checkboxId}" class="form-checkbox h-5 w-5 text-blue-600" onchange="toggleExerciseCompletion('${id}')">
+                    <label for="${checkboxId}" class="text-gray-800 font-medium">${exercise.title}</label>
+                `;
+                checklistExercisesDiv.appendChild(div);
+            }
+        }
+
+        function toggleExerciseCompletion(exerciseId) {
+            const checkbox = document.getElementById(`checklist-${exerciseId}`);
+            if (checkbox.checked) {
+                // Add fatigue
+                exerciseData[exerciseId].musclesWorked.forEach(muscle => {
+                    const muscleName = muscle.name.toLowerCase();
+                    muscleFatigue[muscleName] = Math.min(100, muscleFatigue[muscleName] + muscle.intensity);
+                });
+            } else {
+                // Remove fatigue (simple reset for now, could be more complex)
+                exerciseData[exerciseId].musclesWorked.forEach(muscle => {
+                    const muscleName = muscle.name.toLowerCase();
+                    muscleFatigue[muscleName] = Math.max(0, muscleFatigue[muscleName] - muscle.intensity);
+                });
+            }
+            updateMuscleFatigueOverview();
+            recommendExercises();
+        }
+
+        function updateMuscleFatigueOverview() {
+            muscleFatigueOverview.innerHTML = '';
+            const sortedMuscles = Array.from(allMuscles).sort(); // Sort alphabetically for consistent display
+
+            sortedMuscles.forEach(muscleName => {
+                const currentFatigue = muscleFatigue[muscleName] || 0;
+                const div = document.createElement('div');
+                div.className = 'flex flex-col items-center p-2 bg-white rounded-md shadow-sm';
+                div.innerHTML = `
+                    <span class="text-xs font-semibold text-gray-700">${exerciseData[Object.keys(exerciseData).find(key => exerciseData[key].musclesWorked.some(m => m.name.toLowerCase() === muscleName))]?.musclesWorked.find(m => m.name.toLowerCase() === muscleName)?.layman || muscleName.charAt(0).toUpperCase() + muscleName.slice(1)}</span>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 mt-1">
+                        <div class="bg-blue-600 h-2.5 rounded-full" style="width: ${currentFatigue}%;"></div>
+                    </div>
+                    <span class="text-xs text-gray-500">${currentFatigue}%</span>
+                `;
+                muscleFatigueOverview.appendChild(div);
+            });
+        }
+
+        function recommendExercises() {
+            recommendedExercisesList.innerHTML = '';
+            const fatigueScores = Object.entries(muscleFatigue).sort(([, a], [, b]) => a - b); // Sort by lowest fatigue first
+
+            const topUnderworkedMuscles = fatigueScores.slice(0, 3).map(([name]) => name); // Get top 3 least fatigued muscles
+
+            const recommendations = new Set();
+            topUnderworkedMuscles.forEach(targetMuscle => {
+                // Find exercises that work this muscle and are not too fatiguing for other already worked muscles
+                for (const id in exerciseData) {
+                    const exercise = exerciseData[id];
+                    const targetsThisMuscle = exercise.musclesWorked.some(m => m.name.toLowerCase() === targetMuscle);
+                    const isCompleted = document.getElementById(`checklist-${id}`)?.checked;
+
+                    if (targetsThisMuscle && !isCompleted) {
+                        // Simple logic: if it targets an underworked muscle and isn't completed, recommend it.
+                        // More complex: check if it over-fatigues other muscles that are already high.
+                        // For now, prioritize targeting the underworked.
+                        recommendations.add(exercise.title);
+                        if (recommendations.size >= 3) break; // Limit recommendations
+                    }
+                }
+            });
+
+            if (recommendations.size === 0) {
+                const listItem = document.createElement('li');
+                listItem.textContent = 'All muscles seem well-worked, or no suitable recommendations found.';
+                recommendedExercisesList.appendChild(listItem);
+            } else {
+                recommendations.forEach(rec => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = rec;
+                    recommendedExercisesList.appendChild(listItem);
+                });
+            }
+        }
+
+        checklistModal.addEventListener('click', (event) => {
+            if (event.target === checklistModal) {
+                closeChecklistModal();
+            }
+        });
+
+        // --- Draggable Notes Modal Functions ---
+        let isDragging = false;
+        let offsetX, offsetY;
+
+        function openNotesModal() {
+            notesModal.classList.add('active');
+            // Load saved notes if any (not persistent across sessions without storage)
+            const savedNotes = localStorage.getItem('gymNotes');
+            if (savedNotes) {
+                notesTextarea.value = savedNotes;
+            }
+        }
+
+        function closeNotesModal() {
+            notesModal.classList.remove('active');
+            // Save notes (not persistent across sessions without storage)
+            localStorage.setItem('gymNotes', notesTextarea.value);
+        }
+
+        notesModalHeader.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            offsetX = e.clientX - notesModalContent.getBoundingClientRect().left;
+            offsetY = e.clientY - notesModalContent.getBoundingClientRect().top;
+            notesModalContent.style.cursor = 'grabbing';
+            e.preventDefault(); // Prevent text selection
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const x = e.clientX - offsetX;
+            const y = e.clientY - offsetY;
+            notesModalContent.style.left = `${x}px`;
+            notesModalContent.style.top = `${y}px`;
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            notesModalContent.style.cursor = 'grab';
+        });
+
+        notesModal.addEventListener('click', (event) => {
+            if (event.target === notesModal) {
+                closeNotesModal();
+            }
+        });
+
+    </script>
+
+</body>
+</html>
