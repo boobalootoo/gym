@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slow & Isometric Gym Routine</title>
+    <!-- Tailwind CSS CDN for easy styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Tone.js for sound effects -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+        }
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        /* Style for clickable cards */
+        .exercise-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .exercise-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        /* Styling for the details section within each card */
+        .exercise-details {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, opacity 0.5s ease-out;
+            opacity: 0;
+        }
+        .exercise-details.expanded {
+            max-height: 500px; /* Adjust as needed to fit content */
+            opacity: 1;
+        }
+
+        /* Modal specific styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        .modal-step-action {
+            font-size: 2.5rem; /* Big text for 'LOWER'/'PRESS' */
+            font-weight: bold;
+            color: #1e3a8a; /* Darker blue */
+            margin-bottom: 1rem;
+        }
+
+        /* General Info Toggle Styles */
+        .general-info-header {
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .general-info-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out, opacity 0.5s ease-out;
+            opacity: 0;
+        }
+        .general-info-content.expanded {
+            max-height: 800px; /* Sufficient height to show all content */
+            opacity: 1;
+        }
+        .toggle-icon {
+            transition: transform 0.3s ease-in-out;
+        }
+        .toggle-icon.expanded {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4 sm:p-6 md:p-8">
+
+    <!-- Main Container -->
+    <div class="w-full max-w-4xl bg-white shadow-xl rounded-xl p-6 sm:p-8 lg:p-10">
+
+        <!-- Header Section -->
+        <header class="text-center mb-8 sm:mb-10">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-2">My Slow & Isometric Gym Routine</h1>
+            <p class="text-md sm:text-lg text-gray-600">Focus on control, time under tension, and powerful holds.</p>
+        </header>
+
+        <!-- General Information Section -->
+        <section class="bg-blue-50 p-6 rounded-lg shadow-md mb-8 sm:mb-10">
+            <div class="general-info-header" onclick="toggleGeneralInfo()">
+                <h2 class="text-2xl font-bold text-blue-800">General Information</h2>
+                <svg id="generalInfoToggleIcon" class="w-6 h-6 text-blue-800 toggle-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                </svg>
+            </div>
+            <div id="generalInfoContent" class="general-info-content">
+                <div class="mb-6 mt-4">
+                    <h3 class="text-xl font-semibold text-blue-700 mb-2">Key Principles for This Routine:</h3>
+                    <ul class="list-disc list-inside text-gray-700 space-y-1">
+                        <li><strong class="text-blue-600">Slow Concentric & Eccentric Phases:</strong> For movements, aim for 5 seconds on the lifting phase and 5 seconds on the lowering phase.</li>
+                        <li><strong class="text-blue-600">Isometric Holds:</strong> Hold the most challenging part of the movement (or a specific static position) for the prescribed duration.</li>
+                        <li><strong class="text-blue-600">Control is Paramount:</strong> Forget about momentum. Every inch should be controlled.</li>
+                        <li><strong class="text-blue-600">Breathing:</strong> Remember to breathe throughout your exercises, especially during holds.</li>
+                        <li><strong class="text-blue-600">Form First:</strong> Always prioritize perfect form over heavy weight. Start lighter than you normally would.</li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="text-xl font-semibold text-blue-700 mb-2">How to Select the Correct Weight for Beginners:</h3>
+                    <ul class="list-disc list-inside text-gray-700 space-y-1">
+                        <li><strong class="text-blue-600">The "Feel" Test (Slow Reps):</strong> Choose a weight that allows you to complete the prescribed 6-12 very slow repetitions (e.g., 5 seconds up, 5 seconds down) while maintaining strict form. The last 1-2 reps should feel challenging.</li>
+                        <li><strong class="text-blue-600">The "Feel" Test (Isometric Holds):</strong> Choose a weight that allows you to hold the position for the prescribed 20-45 seconds. You should feel intense muscle contraction, and by the end of the hold, the muscle should be quivering.</li>
+                        <li><strong class="text-blue-600">Trial and Error:</strong> Don't be afraid to experiment. Adjust the weight if it feels too easy or too hard.</li>
+                        <li><strong class="text-blue-600">Focus on Connection:</strong> Concentrate on feeling the target muscle work. If you're struggling with form, the weight is likely too heavy.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Exercise List -->
+        <main class="grid grid-cols-1 gap-6 sm:gap-8">
+
+            <!-- 1. Leg Press (Slow Reps) -->
+            <div class="exercise-card bg-gray-50 p-5 rounded-lg shadow-md flex flex-col sm:flex-row items-center sm:items-start gap-4" data-exercise-id="leg-press-slow-reps">
+                <div class="flex-shrink-0 w-full sm:w-48 h-32 sm:h-auto overflow-hidden rounded-md">
+                    <img src="https://placehold.co/300x200/a0c4ff/ffffff?text=Leg+Press" alt="Leg Press Machine" class="w-full h-full object-cover rounded-md">
+                </div>
+                <div class="flex-grow text-center sm:text-left">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">1. Leg Press (Slow Reps)</h2>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Working:</strong> Quadriceps, Gluteus Maximus, Hamstrings</p>
+                    <p class="text-gray-700"><strong class="text-blue-600">Duration:</strong> 2-3 sets, 6-8 very slow reps</p>
+                    <button class="mt-4 px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onclick="event.stopPropagation(); startExercise('leg-press-slow-reps');">Start Exercise</button>
+                </div>
+                <div class="exercise-details w-full mt-4 pt-4 border-t border-gray-200 text-left" onclick="event.stopPropagation(); toggleDetails(this.parentNode);">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Detailed Information:</h3>
+                    <p class="text-gray-600 mb-2"><strong class="text-blue-600">Form Tips:</strong> Sit with your back firmly against the pad. Place feet shoulder-width apart in the middle of the plate. Lower slowly (5s), press slowly (5s), keeping a slight bend at the top. Inhale as you lower, exhale as you press.</p>
+                    <p class="text-gray-600 mb-2"><strong class="text-blue-600">Muscles Used:</strong> <span class="font-medium">Primary:</span> Quadriceps, Gluteus Maximus. <span class="font-medium">Secondary/Synergists:</span> Hamstrings, Calves (lesser extent).</p>
+                    <p class="text-gray-600"><strong class="text-blue-600">Fatigue Level (Beginner):</strong> <span class="font-medium">Very high fatigue</span> in the quadriceps and glutes. Significant DOMS in the front of the thighs and glutes.</p>
+                </div>
+            </div>
+
+            <!-- 1. Leg Press (Isometric Hold) -->
+            <div class="exercise-card bg-gray-50 p-5 rounded-lg shadow-md flex flex-col sm:flex-row items-center sm:items-start gap-4" data-exercise-id="leg-press-hold">
+                <div class="flex-shrink-0 w-full sm:w-48 h-32 sm:h-auto overflow-hidden rounded-md">
+                    <img src="https://placehold.co/300x200/a0c4ff/ffffff?text=Leg+Press+Hold" alt="Leg Press Machine" class="w-full h-full object-cover rounded-md">
+                </div>
+                <div class="flex-grow text-center sm:text-left">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">2. Leg Press (Isometric Hold)</h2>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Working:</strong> Quadriceps, Gluteus Maximus, Hamstrings</p>
+                    <p class="text-gray-700"><strong class="text-blue-600">Duration:</strong> 2-3 sets, 30-45 sec hold</p>
+                    <button class="mt-4 px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onclick="event.stopPropagation(); startExercise('leg-press-hold');">Start Exercise</button>
+                </div>
+                <div class="exercise-details w-full mt-4 pt-4 border-t border-gray-200 text-left" onclick="event.stopPropagation(); toggleDetails(this.parentNode);">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Detailed Information:</h3>
+                    <p class="text-gray-600 mb-2"><strong class="text-blue-600">Form Tips:</strong> Press the weight up, then slowly lower it about halfway down (or to a challenging point where your knees are at roughly a 90-degree angle). Hold this position steadily. Breathe continuously during the hold.</p>
+                    <p class="text-gray-600 mb-2"><strong class="text-blue-600">Muscles Used:</strong> <span class="font-medium">Primary:</span> Quadriceps, Gluteus Maximus. <span class="font-medium">Secondary/Synergists:</span> Hamstrings, Calves (lesser extent).</p>
+                    <p class="text-gray-600"><strong class="text-blue-600">Fatigue Level (Beginner):</strong> <span class="font-medium">Very high fatigue</span> in the quadriceps and glutes. Significant DOMS in the front of the thighs and glutes will be significant.</p>
+                </div>
+            </div>
+
+            <!-- 2. Goblet Squat (Slow Movement) -->
+            <div class="exercise-card bg-gray-50 p-5 rounded-lg shadow-md flex flex-col sm:flex-row items-center sm:items-start gap-4" data-exercise-id="goblet-squat-slow-reps">
+                <div class="flex-shrink-0 w-full sm:w-48 h-32 sm:h-auto overflow-hidden rounded-md">
+                    <img src="https://placehold.co/300x200/a0c4ff/ffffff?text=Goblet+Squat" alt="Person doing Goblet Squat" class="w-full h-full object-cover rounded-md">
+                </div>
+                <div class="flex-grow text-center sm:text-left">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">3. Goblet Squat (Slow Reps)</h2>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Working:</strong> Quadriceps, Gluteus Maximus, Hamstrings, Core</p>
+                    <p class="text-gray-700"><strong class="text-blue-600">Duration:</strong> 2-3 sets, 6-10 very slow reps</p>
+                    <button class="mt-4 px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onclick="event.stopPropagation(); startExercise('goblet-squat-slow-reps');">Start Exercise</button>
+                </div>
+                <div class="exercise-details w-full mt-4 pt-4 border-t border-gray-200 text-left" onclick="event.stopPropagation(); toggleDetails(this.parentNode);">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Detailed Information:</h3>
+                    <p class="text-gray-600 mb-2"><strong class="text-blue-600">Form Tips:</strong> Stand feet slightly wider than shoulder-width, toes out. Hold weight at chest. Slowly lower for 5s, pushing hips back, keeping chest up. Pause briefly, then slowly rise for 5s. Inhale down, exhale up.</p>
+                    <p class="text-gray-600 mb-2"><strong class="text-blue-600">Muscles Used:</strong> <span class="font-medium">Primary:</span> Quadriceps, Gluteus Maximus, Hamstrings. <span class="font-medium">Secondary/Stabilizers:</span> Core, Erector Spinae, Calves.</p>
+                    <p class="text-gray-600"><strong class="text-blue-600">Fatigue Level (Beginner):</strong> <span class="font-medium">Very high fatigue</span> in the quads, glutes, and hamstrings. Significant core engagement will also lead to fatigue. Expect full lower body DOMS.</p>
+                </div>
+            </div>
+
+            <!-- 3. Multi-Press (Slow Chest Press) -->
+            <div class="exercise-card bg-gray-50 p-5 rounded-lg shadow-md flex flex-col sm:flex-row items-center sm:items-start gap-4" data-exercise-id="multi-press-slow-reps">
+                <div class="flex-shrink-0 w-full sm:w-48 h-32 sm:h-auto overflow-hidden rounded-md">
+                    <img src="https://placehold.co/300x200/a0c4ff/ffffff?text=Multi-Press" alt="Multi-Press Machine" class="w-full h-full object-cover rounded-md">
+                </div>
+                <div class="flex-grow text-center sm:text-left">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">4. Multi-Press (Slow Reps)</h2>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Working:</strong> Pectoralis Major (Chest), Anterior Deltoids, Triceps</p>
+                    <p class="text-gray-700"><strong class="text-blue-600">Duration:</strong> 2-3 sets, 8-12 slow reps</p>
+                    <button class="mt-4 px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onclick="event.stopPropagation(); startExercise('multi-press-slow-reps');">Start Exercise</button>
+                </div>
+                <div class="exercise-details w-full mt-4 pt-4 border-t border-gray-200 text-left" onclick="event.stopPropagation(); toggleDetails(this.parentNode);">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Detailed Information:</h3>
+                    <p class="text-gray-600 mb-2"><strong class="text-blue-600">Form Tips:</strong> Adjust seat for handles at mid-chest. Back firm, feet flat. Slowly press handles away (5s), squeezing chest. Slowly return (5s), controlling weight. Exhale as you press, inhale as you return.</p>
+                    <p class="text-gray-600 mb-2"><strong class="text-blue-600">Muscles Used:</strong> <span class="font-medium">Primary:</span> Pectoralis Major (chest). <span class="font-medium">Secondary/Synergists:</span> Anterior Deltoids (front of shoulders), Triceps (back of upper arms).</p>
+                    <p class="text-gray-600"><strong class="text-blue-600">Fatigue Level (Beginner):</strong> <span class="font-medium">High fatigue</span> in the chest muscles, with noticeable involvement of the front shoulders and triceps. Expect DOMS in the chest area and potentially the front of the shoulders.</p>
+                </div>
+            </div>
+
+            <!-- 4. Lat Pulldown (Slow Reps) -->
+            <div class="exercise-card bg-gray-50 p-5 rounded-lg shadow-md flex flex-col sm:flex-row items-center sm:items-start gap-4" data-exercise-id="lat-pulldown-slow-reps">
+                <div class="flex-shrink-0 w-full sm:w-48 h-32 sm:h-auto overflow-hidden rounded-md">
+                    <img src="https://placehold.co/300x200/a0c4ff/ffffff?text=Lat+Pulldown" alt="Lat Pulldown Machine" class="w-full h-full object-cover rounded-md">
+                </div>
+                <div class="flex-grow text-center sm:text-left">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">5. Lat Pulldown (Slow Reps)</h2>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Working:</strong> Latissimus Dorsi (Lats), Biceps, Rhomboids, Trapezius</p>
+                    <p class="text-gray-700"><strong class="text-blue-600">Duration:</strong> 2-3 sets, 6-10 slow reps</p>
+                    <button class="mt-4 px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onclick="event.stopPropagation(); startExercise('lat-pulldown-slow-reps');">Start Exercise</button>
+                </div>
+                <div class="exercise-details w-full mt-4 pt-4 border-t border-gray-200 text-left" onclick="event.stopPropagation(); toggleDetails(this.parentNode);">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Detailed Information:</h3>
+                    <p class="text-gray-600 mb-2"><strong class="text-blue-600">Form Tips:</strong> Secure thighs under pad. Grasp bar overhand, slightly wider than shoulder-width. Lean back slightly. Slowly pull bar to upper chest (5s), squeezing lats. Slowly release (5s). Exhale down, inhale up.</p>
+                    <p class="text-gray-600 mb-2"><strong class="text-blue-600">Muscles Used:</strong> <span class="font-medium">Primary:</span> Latissimus Dorsi (lats). <span class="font-medium">Secondary/Synergists:</span> Biceps, Rhomboids & Trapezius, Posterior Deltoids.</p>
+                    <p class="text-gray-600"><strong class="text-blue-600">Fatigue Level (Beginner):</strong> <span class="font-medium">Very high fatigue</span> in the lats. Biceps will also feel significantly worked. Expect considerable DOMS in the mid-upper back and potentially biceps.</p>
+                </div>
+            </div>
+
+            <!-- 4. Lat Pulldown (Isometric Hold) -->
+            <div class="exercise-card bg-gray-50 p-5 rounded-lg shadow-md flex flex-col sm:flex-row items-center sm:items-start gap-4" data-exercise-id="lat-pulldown-hold">
+                <div class="flex-shrink-0 w-full sm:w-48 h-32 sm:h-auto overflow-hidden rounded-md">
+                    <img src="https://placehold.co/300x200/a0c4ff/ffffff?text=Lat+Pulldown+Hold" alt="Lat Pulldown Machine" class="w-full h-full object-cover rounded-md">
+                </div>
+                <div class="flex-grow text-center sm:text-left">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">6. Lat Pulldown (Isometric Hold)</h2>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Working:</strong> Latissimus Dorsi (Lats), Biceps, Rhomboids, Trapezius</p>
+                    <p class="text-gray-700"><strong class="text-blue-600">Duration:</strong> 2-3 sets, 20-30 sec hold</p>
+                    <button class="mt-4 px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onclick="event.stopPropagation(); startExercise('lat-pulldown-hold');">Start Exercise</button>
+                </div>
+                <div class="exercise-details w-full mt-4 pt-4 border-t border-gray-200 text-left" onclick="event.stopPropagation(); toggleDetails(this.parentNode);">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Detailed Information:</h3>
+                    <p class="text-gray-600 mb-2"><strong class="text-blue-600">Form Tips:</strong> Secure thighs under pad. Grasp bar overhand, slightly wider than shoulder-width. Lean back slightly. Pull the bar down to your upper chest and hold that contracted position, squeezing your shoulder blades together and down. Breathe continuously during the hold.</p>
+                    <p class="text-gray-600 mb-2"><strong class="text-blue-600">Muscles Used:</strong> <span class="font-medium">Primary:</span> Latissimus Dorsi (lats). <span class="font-medium">Secondary/Synergists:</span> Biceps, Rhomboids & Trapezius, Posterior Deltoids.</p>
+                    <p class="text-gray-600"><strong class="text-blue-600">Fatigue Level (Beginner):</strong> <span class="font-medium">Very high fatigue</span> in the lats. Biceps will also feel significantly worked. Expect considerable DOMS in the mid-upper back and potentially biceps.</p>
+                </div>
+            </div>
+
+            <!-- 5. Cable Fly Hold -->
+            <div class="exercise-card bg-gray-50 p-5 rounded-lg shadow-md flex flex-col sm:flex-row items-center sm:items-start gap-4" data-exercise-id="cable-fly-hold">
+                <div class="flex-shrink-0 w-full sm:w-48 h-32 sm:h-auto overflow-hidden rounded-md">
+                    <img src="https://placehold.co/300x200/a0c4ff/ffffff?text=Cable+Fly" alt="Cable Crossover Machine" class="w-full h-full object-cover rounded-md">
+                </div>
+                <div class="flex-grow text-center sm:text-left">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">7. Cable Fly (Isometric Hold)</h2>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Working:</strong> Pectoralis Major (Chest), Anterior Deltoids</p>
+                    <p class="text-gray-700"><strong class="text-blue-600">Duration:</strong> 2-3 sets, 20-30 sec hold</p>
+                    <button class="mt-4 px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onclick="event.stopPropagation(); startExercise('cable-fly-hold');">Start Exercise</button>
+                </div>
+                <div class="exercise-details w-full mt-4 pt-4 border-t border-gray-200 text-left" onclick="event.stopPropagation(); toggleDetails(this.parentNode);">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Detailed Information:</h3>
+                    <p class="text-gray-600 mb-2"><strong class="text-blue-600">Form Tips:</strong> Set pulleys to shoulder height. Stand in center, handles in each hand. Step forward slightly, slight bend in elbows. Bring hands together in a wide arc in front of chest, squeezing pectorals hard. Hold steadily. Breathe continuously.</p>
+                    <p class="text-gray-600 mb-2"><strong class="text-blue-600">Muscles Used:</strong> <span class="font-medium">Primary:</span> Pectoralis Major (chest), particularly sternal fibers. <span class="font-medium">Secondary/Stabilizers:</span> Anterior Deltoids, Biceps (minor).</p>
+                    <p class="text-gray-600"><strong class="text-blue-600">Fatigue Level (Beginner):</strong> <span class="font-medium">High fatigue</span> in the chest. This concentrated isometric contraction will likely cause a deep burning sensation. DOMS will be focused heavily on the chest.</p>
+                </div>
+            </div>
+
+            <!-- 6. Dumbbell Lateral Raise (Slow Reps) -->
+            <div class="exercise-card bg-gray-50 p-5 rounded-lg shadow-md flex flex-col sm:flex-row items-center sm:items-start gap-4" data-exercise-id="lateral-raise-slow-reps">
+                <div class="flex-shrink-0 w-full sm:w-48 h-32 sm:h-auto overflow-hidden rounded-md">
+                    <img src="https://placehold.co/300x200/a0c4ff/ffffff?text=Lateral+Raise" alt="Person doing Dumbbell Lateral Raise" class="w-full h-full object-cover rounded-md">
+                </div>
+                <div class="flex-grow text-center sm:text-left">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">8. Dumbbell Lateral Raise (Slow Reps)</h2>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Working:</strong> Medial Deltoids (Side Shoulders)</p>
+                    <p class="text-gray-700"><strong class="text-blue-600">Duration:</strong> 2-3 sets, 8-12 slow reps</p>
+                    <button class="mt-4 px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onclick="event.stopPropagation(); startExercise('lateral-raise-slow-reps');">Start Exercise</button>
+                </div>
+                <div class="exercise-details w-full mt-4 pt-4 border-t border-gray-200 text-left" onclick="event.stopPropagation(); toggleDetails(this.parentNode);">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Detailed Information:</h3>
+                    <p class="text-gray-600 mb-2"><strong class="text-blue-600">Form Tips:</strong> Stand tall, slight knee bend. Hold light dumbbells by sides, slight elbow bend. Slowly raise dumbbells out to sides (5s) to shoulder height, leading with elbows. Avoid shrugging. Slowly lower (5s). Exhale up, inhale down.</p>
+                    <p class="text-gray-600 mb-2"><strong class="text-blue-600">Muscles Used:</strong> <span class="font-medium">Primary:</span> Medial Deltoids (side of shoulders). <span class="font-medium">Secondary/Stabilizers:</span> Trapezius (minor), Rotator Cuff.</p>
+                    <p class="text-gray-600"><strong class="text-blue-600">Fatigue Level (Beginner):</strong> <span class="font-medium">High to very high fatigue</span> in the side deltoids. Expect a quick burn and significant DOMS in the outer shoulder region.</p>
+                </div>
+            </div>
+
+            <!-- 6. Dumbbell Lateral Raise (Isometric Hold) -->
+            <div class="exercise-card bg-gray-50 p-5 rounded-lg shadow-md flex flex-col sm:flex-row items-center sm:items-start gap-4" data-exercise-id="lateral-raise-hold">
+                <div class="flex-shrink-0 w-full sm:w-48 h-32 sm:h-auto overflow-hidden rounded-md">
+                    <img src="https://placehold.co/300x200/a0c4ff/ffffff?text=Lateral+Raise+Hold" alt="Person doing Dumbbell Lateral Raise" class="w-full h-full object-cover rounded-md">
+                </div>
+                <div class="flex-grow text-center sm:text-left">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">9. Dumbbell Lateral Raise (Isometric Hold)</h2>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Working:</strong> Medial Deltoids (Side Shoulders)</p>
+                    <p class="text-gray-700"><strong class="text-blue-600">Duration:</strong> 2-3 sets, 15-25 sec hold</p>
+                    <button class="mt-4 px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onclick="event.stopPropagation(); startExercise('lateral-raise-hold');">Start Exercise</button>
+                </div>
+                <div class="exercise-details w-full mt-4 pt-4 border-t border-gray-200 text-left" onclick="event.stopPropagation(); toggleDetails(this.parentNode);">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Detailed Information:</h3>
+                    <p class="text-gray-600 mb-2"><strong class="text-blue-600">Form Tips:</strong> Stand tall, slight knee bend. Hold light dumbbells by sides, slight elbow bend. Raise dumbbells out to sides to shoulder height and hold this position, feeling the burn in the side of your shoulders. Breathe continuously during holds.</p>
+                    <p class="text-gray-600 mb-2"><strong class="text-blue-600">Muscles Used:</strong> <span class="font-medium">Primary:</span> Medial Deltoids (side of shoulders). <span class="font-medium">Secondary/Stabilizers:</span> Trapezius (minor), Rotator Cuff.</p>
+                    <p class="text-gray-600"><strong class="text-blue-600">Fatigue Level (Beginner):</strong> <span class="font-medium">High to very high fatigue</span> in the side deltoids. Expect a quick burn and significant DOMS in the outer shoulder region.</p>
+                </div>
+            </div>
+
+            <!-- 7. Cable Bicep Curl (Slow Reps) -->
+            <div class="exercise-card bg-gray-50 p-5 rounded-lg shadow-md flex flex-col sm:flex-row items-center sm:items-start gap-4" data-exercise-id="bicep-curl-slow-reps">
+                <div class="flex-shrink-0 w-full sm:w-48 h-32 sm:h-auto overflow-hidden rounded-md">
+                    <img src="https://placehold.co/300x200/a0c4ff/ffffff?text=Bicep+Curl" alt="Person doing Cable Bicep Curl" class="w-full h-full object-cover rounded-md">
+                </div>
+                <div class="flex-grow text-center sm:text-left">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">10. Cable Bicep Curl (Slow Reps)</h2>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Working:</strong> Biceps Brachii, Brachialis, Brachioradialis</p>
+                    <p class="text-gray-700"><strong class="text-blue-600">Duration:</strong> 2-3 sets, 8-12 slow reps</p>
+                    <button class="mt-4 px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onclick="event.stopPropagation(); startExercise('bicep-curl-slow-reps');">Start Exercise</button>
+                </div>
+                <div class="exercise-details w-full mt-4 pt-4 border-t border-gray-200 text-left" onclick="event.stopPropagation(); toggleDetails(this.parentNode);">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Detailed Information:</h3>
+                    <p class="text-gray-600 mb-2"><strong class="text-blue-600">Form Tips:</strong> Stand facing low pulley, feet shoulder-width. Grasp bar/rope underhand, hands shoulder-width. Keep elbows tucked. Slowly curl bar up (5s), squeezing biceps. Slowly lower (5s) until arms fully extended but not locked. Exhale up, inhale down.</p>
+                    <p class="text-gray-600 mb-2"><strong class="text-blue-600">Muscles Used:</strong> <span class="font-medium">Primary:</span> Biceps Brachii. <span class="font-medium">Secondary/Synergists:</span> Brachialis, Brachioradialis.</p>
+                    <p class="text-gray-600"><strong class="text-blue-600">Fatigue Level (Beginner):</strong> <span class="font-medium">High fatigue</span> in the biceps. This focused, slow movement will quickly lead to a strong burning sensation. DOMS will be noticeable in the front of the upper arms.</p>
+                </div>
+            </div>
+
+            <!-- 8. Plank Hold -->
+            <div class="exercise-card bg-gray-50 p-5 rounded-lg shadow-md flex flex-col sm:flex-row items-center sm:items-start gap-4" data-exercise-id="plank-hold">
+                <div class="flex-shrink-0 w-full sm:w-48 h-32 sm:h-auto overflow-hidden rounded-md">
+                    <img src="https://placehold.co/300x200/a0c4ff/ffffff?text=Plank+Hold" alt="Person doing Plank Hold" class="w-full h-full object-cover rounded-md">
+                </div>
+                <div class="flex-grow text-center sm:text-left">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">11. Plank Hold</h2>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Working:</strong> Rectus Abdominis, Transverse Abdominis, Obliques, Lower Back</p>
+                    <p class="text-gray-700"><strong class="text-blue-600">Duration:</strong> 2-3 sets, 45-90 sec hold</p>
+                    <button class="mt-4 px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onclick="event.stopPropagation(); startExercise('plank-hold');">Start Exercise</button>
+                </div>
+                <div class="exercise-details w-full mt-4 pt-4 border-t border-gray-200 text-left" onclick="event.stopPropagation(); toggleDetails(this.parentNode);">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Detailed Information:</h3>
+                    <p class="text-gray-600 mb-2"><strong class="text-blue-600">Form Tips:</strong> Forearms on floor, elbows under shoulders. Extend legs straight back, on balls of feet. Engage core (belly button to spine), squeeze glutes. Keep body straight from head to heels; avoid sagging hips or raising butt. Gaze down/slightly forward. Breathe deeply and steadily.</p>
+                    <p class="text-gray-600 mb-2"><strong class="text-blue-600">Muscles Used:</strong> <span class="font-medium">Primary:</span> Rectus Abdominis, Transverse Abdominis, Obliques. <span class="font-medium">Secondary/Stabilizers:</span> Erector Spinae, Gluteus Maximus, Quadriceps, Deltoids, Pectorals.</p>
+                    <p class="text-gray-600"><strong class="text-blue-600">Fatigue Level (Beginner):</strong> <span class="font-medium">Very high fatigue</span> in the core muscles. Expect significant shaking and burning. DOMS in the core will be common.</p>
+                </div>
+            </div>
+
+            <!-- 9. Wall Sit (Isometric Hold) -->
+            <div class="exercise-card bg-gray-50 p-5 rounded-lg shadow-md flex flex-col sm:flex-row items-center sm:items-start gap-4" data-exercise-id="wall-sit">
+                <div class="flex-shrink-0 w-full sm:w-48 h-32 sm:h-auto overflow-hidden rounded-md">
+                    <img src="https://placehold.co/300x200/a0c4ff/ffffff?text=Wall+Sit" alt="Person doing Wall Sit" class="w-full h-full object-cover rounded-md">
+                </div>
+                <div class="flex-grow text-center sm:text-left">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">12. Wall Sit</h2>
+                    <p class="text-gray-700 mb-1"><strong class="text-blue-600">Working:</strong> Quadriceps, Gluteus Maximus, Hamstrings</p>
+                    <p class="text-gray-700"><strong class="text-blue-600">Duration:</strong> 2-3 sets, 30-60 sec hold</p>
+                    <button class="mt-4 px-4 py-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onclick="event.stopPropagation(); startExercise('wall-sit');">Start Exercise</button>
+                </div>
+                <div class="exercise-details w-full mt-4 pt-4 border-t border-gray-200 text-left" onclick="event.stopPropagation(); toggleDetails(this.parentNode);">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-2">Detailed Information:</h3>
+                    <p class="text-gray-600 mb-2"><strong class="text-blue-600">Form Tips:</strong> Back flat against wall. Slide down until knees are at 90 degrees, thighs parallel to floor. Entire back and shoulders pressed against wall. Feet flat, shoulder-width apart. Core engaged. Breathe deeply and steadily.</p>
+                    <p class="text-gray-600 mb-2"><strong class="text-blue-600">Muscles Used:</strong> <span class="font-medium">Primary:</span> Quadriceps. <span class="font-medium">Secondary/Stabilizers:</span> Gluteus Maximus, Hamstrings, Core.</p>
+                    <p class="text-gray-600"><strong class="text-blue-600">Fatigue Level (Beginner):</strong> <span class="font-medium">Extremely high fatigue</span> in the quadriceps. Rapid lactic acid buildup leading to intense burning. Very significant DOMS in the quads.</p>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Footer Section -->
+        <footer class="text-center mt-10 text-gray-500 text-sm">
+            <p>&copy; 2025 Slow & Isometric Routine. All rights reserved.</p>
+        </footer>
+
+    </div>
+
+    <!-- Exercise Modal Overlay -->
+    <div id="exerciseModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2 id="modalExerciseTitle" class="text-2xl font-bold text-gray-800 mb-4"></h2>
+            <img id="modalExerciseImage" src="" alt="Exercise Step" class="w-full max-w-sm rounded-md mb-4 object-cover h-48">
+            <p id="modalStepAction" class="modal-step-action"></p> <!-- New element for "LOWER" / "PRESS" -->
+            <p id="modalStepDescription" class="text-lg text-gray-700 mb-4"></p>
+            <p id="modalTimer" class="text-4xl font-extrabold text-blue-600 mb-6">00:00</p>
+            <div class="flex space-x-4">
+                <button id="prevStepBtn" class="px-6 py-3 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75" onclick="prevStep()">Previous</button>
+                <button id="pauseResumeBtn" class="px-6 py-3 bg-yellow-500 text-white font-semibold rounded-lg shadow-md hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-opacity-75" onclick="togglePause()">Pause</button>
+                <button id="nextStepBtn" class="px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75" onclick="nextStep()">Next</button>
+            </div>
+            <button class="mt-6 px-6 py-3 bg-red-500 text-white font-semibold rounded-lg shadow-md hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75" onclick="finishExercise()">Finish Exercise</button>
+        </div>
+    </div>
+
+    <script>
+        // Data structure for exercise steps
+        const exerciseData = {
+            'leg-press-slow-reps': {
+                title: 'Leg Press - Slow Reps',
+                steps: [
+                    { text: 'Prepare: Adjust seat, load weight, feet on plate. Ensure proper back support.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Leg+Press+Setup' },
+                    { text: 'Get ready for Rep 1!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+1+Start' },
+                    { action: 'LOWER', text: 'Rep 1: Slowly lower the weight for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Leg+Press+Lower' },
+                    { action: 'PRESS', text: 'Rep 1: Slowly press the weight up for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Leg+Press+Press' },
+                    { text: 'Get ready for Rep 2!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+2+Start' },
+                    { action: 'LOWER', text: 'Rep 2: Slowly lower the weight for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Leg+Press+Lower' },
+                    { action: 'PRESS', text: 'Rep 2: Slowly press the weight up for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Leg+Press+Press' },
+                    { text: 'Get ready for Rep 3!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+3+Start' },
+                    { action: 'LOWER', text: 'Rep 3: Slowly lower the weight for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Leg+Press+Lower' },
+                    { action: 'PRESS', text: 'Rep 3: Slowly press the weight up for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Leg+Press+Press' },
+                    { text: 'Set complete! Rest for 60-90 seconds before your next set.', duration: 75, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rest' }
+                ]
+            },
+            'leg-press-hold': {
+                title: 'Leg Press - Isometric Hold',
+                steps: [
+                    { text: 'Prepare: Adjust seat, load weight, feet on plate. Ensure proper back support.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Leg+Press+Setup' },
+                    { action: 'HOLD', text: 'Lower to 90 degrees and HOLD for 30-45 seconds. Feel the burn!', duration: 35, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Leg+Press+Hold' },
+                    { text: 'Set complete! Rest for 60-90 seconds before your next set.', duration: 75, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rest' }
+                ]
+            },
+            'goblet-squat-slow-reps': {
+                title: 'Goblet Squat - Slow Reps',
+                steps: [
+                    { text: 'Prepare: Stand with feet slightly wider than shoulder-width, hold kettlebell/dumbbell at chest.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Goblet+Squat+Setup' },
+                    { text: 'Get ready for Rep 1!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+1+Start' },
+                    { action: 'LOWER', text: 'Rep 1: Slowly lower into a squat for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Goblet+Squat+Lower' },
+                    { action: 'STAND', text: 'Rep 1: Slowly stand up for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Goblet+Squat+Stand' },
+                    { text: 'Get ready for Rep 2!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+2+Start' },
+                    { action: 'LOWER', text: 'Rep 2: Slowly lower into a squat for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Goblet+Squat+Lower' },
+                    { action: 'STAND', text: 'Rep 2: Slowly stand up for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Goblet+Squat+Stand' },
+                    { text: 'Get ready for Rep 3!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+3+Start' },
+                    { action: 'LOWER', text: 'Rep 3: Slowly lower into a squat for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Goblet+Squat+Lower' },
+                    { action: 'STAND', text: 'Rep 3: Slowly stand up for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Goblet+Squat+Stand' },
+                    { text: 'Set complete! Rest for 60-90 seconds before your next set.', duration: 75, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rest' }
+                ]
+            },
+            'multi-press-slow-reps': {
+                title: 'Multi-Press - Slow Reps',
+                steps: [
+                    { text: 'Prepare: Adjust seat for handles at mid-chest. Sit with back firm, feet flat.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Multi-Press+Setup' },
+                    { text: 'Get ready for Rep 1!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+1+Start' },
+                    { action: 'PRESS', text: 'Rep 1: Slowly press handles away for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Multi-Press+Press' },
+                    { action: 'RETURN', text: 'Rep 1: Slowly return handles for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Multi-Press+Return' },
+                    { text: 'Get ready for Rep 2!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+2+Start' },
+                    { action: 'PRESS', text: 'Rep 2: Slowly press handles away for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Multi-Press+Press' },
+                    { action: 'RETURN', text: 'Rep 2: Slowly return handles for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Multi-Press+Return' },
+                    { text: 'Get ready for Rep 3!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+3+Start' },
+                    { action: 'PRESS', text: 'Rep 3: Slowly press handles away for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Multi-Press+Press' },
+                    { action: 'RETURN', text: 'Rep 3: Slowly return handles for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Multi-Press+Return' },
+                    { text: 'Set complete! Rest for 60-90 seconds before your next set.', duration: 75, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rest' }
+                ]
+            },
+            'lat-pulldown-slow-reps': {
+                title: 'Lat Pulldown - Slow Reps',
+                steps: [
+                    { text: 'Prepare: Secure thighs under pad. Grasp bar overhand, slightly wider than shoulder-width.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lat+Pulldown+Setup' },
+                    { text: 'Get ready for Rep 1!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+1+Start' },
+                    { action: 'PULL', text: 'Rep 1: Slowly pull the bar down for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lat+Pulldown+Pull' },
+                    { action: 'RELEASE', text: 'Rep 1: Slowly release the bar up for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lat+Pulldown+Release' },
+                    { text: 'Get ready for Rep 2!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+2+Start' },
+                    { action: 'PULL', text: 'Rep 2: Slowly pull the bar down for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lat+Pulldown+Pull' },
+                    { action: 'RELEASE', text: 'Rep 2: Slowly release the bar up for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lat+Pulldown+Release' },
+                    { text: 'Get ready for Rep 3!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+3+Start' },
+                    { action: 'PULL', text: 'Rep 3: Slowly pull the bar down for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lat+Pulldown+Pull' },
+                    { action: 'RELEASE', text: 'Rep 3: Slowly release the bar up for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lat+Pulldown+Release' },
+                    { text: 'Set complete! Rest for 60-90 seconds before your next set.', duration: 75, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rest' }
+                ]
+            },
+            'lat-pulldown-hold': {
+                title: 'Lat Pulldown - Isometric Hold',
+                steps: [
+                    { text: 'Prepare: Secure thighs under pad. Grasp bar overhand, slightly wider than shoulder-width.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lat+Pulldown+Setup' },
+                    { action: 'HOLD', text: 'Pull bar to upper chest and HOLD for 20-30 seconds. Squeeze your lats.', duration: 25, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lat+Pulldown+Hold' },
+                    { text: 'Set complete! Rest for 60-90 seconds before your next set.', duration: 75, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rest' }
+                ]
+            },
+            'cable-fly-hold': {
+                title: 'Cable Fly - Isometric Hold',
+                steps: [
+                    { text: 'Prepare: Set pulleys to shoulder height. Stand in center, handles in each hand, slight elbow bend.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Cable+Fly+Setup' },
+                    { action: 'HOLD', text: 'Bring hands together in a wide arc in front of chest. HOLD for 20-30 seconds. Squeeze pectorals hard.', duration: 25, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Cable+Fly+Hold' },
+                    { text: 'Set complete! Rest for 60 seconds before your next set.', duration: 60, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rest' }
+                ]
+            },
+            'lateral-raise-slow-reps': {
+                title: 'Dumbbell Lateral Raise - Slow Reps',
+                steps: [
+                    { text: 'Prepare: Stand tall, slight knee bend. Hold light dumbbells by sides, slight elbow bend.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lateral+Raise+Setup' },
+                    { text: 'Get ready for Rep 1!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+1+Start' },
+                    { action: 'RAISE', text: 'Rep 1: Slowly raise dumbbells out to sides for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lateral+Raise+Raise' },
+                    { action: 'LOWER', text: 'Rep 1: Slowly lower dumbbells for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lateral+Raise+Lower' },
+                    { text: 'Get ready for Rep 2!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+2+Start' },
+                    { action: 'RAISE', text: 'Rep 2: Slowly raise dumbbells out to sides for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lateral+Raise+Raise' },
+                    { action: 'LOWER', text: 'Rep 2: Slowly lower dumbbells for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lateral+Raise+Lower' },
+                    { text: 'Get ready for Rep 3!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+3+Start' },
+                    { action: 'RAISE', text: 'Rep 3: Slowly raise dumbbells out to sides for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lateral+Raise+Raise' },
+                    { action: 'LOWER', text: 'Rep 3: Slowly lower dumbbells for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lateral+Raise+Lower' },
+                    { text: 'Set complete! Rest for 60 seconds before your next set.', duration: 60, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rest' }
+                ]
+            },
+            'lateral-raise-hold': {
+                title: 'Dumbbell Lateral Raise - Isometric Hold',
+                steps: [
+                    { text: 'Prepare: Stand tall, slight knee bend. Hold light dumbbells by sides, slight elbow bend.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lateral+Raise+Setup' },
+                    { action: 'HOLD', text: 'Raise dumbbells to shoulder height and HOLD for 15-25 seconds.', duration: 20, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Lateral+Raise+Hold' },
+                    { text: 'Set complete! Rest for 60 seconds before your next set.', duration: 60, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rest' }
+                ]
+            },
+            'bicep-curl-slow-reps': {
+                title: 'Cable Bicep Curl - Slow Reps',
+                steps: [
+                    { text: 'Prepare: Stand facing low pulley. Grasp bar/rope underhand, elbows tucked.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Bicep+Curl+Setup' },
+                    { text: 'Get ready for Rep 1!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+1+Start' },
+                    { action: 'CURL', text: 'Rep 1: Slowly curl the bar up for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Bicep+Curl+Curl' },
+                    { action: 'LOWER', text: 'Rep 1: Slowly lower the bar for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Bicep+Curl+Lower' },
+                    { text: 'Get ready for Rep 2!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+2+Start' },
+                    { action: 'CURL', text: 'Rep 2: Slowly curl the bar up for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Bicep+Curl+Curl' },
+                    { action: 'LOWER', text: 'Rep 2: Slowly lower the bar for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Bicep+Curl+Lower' },
+                    { text: 'Get ready for Rep 3!', duration: 3, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rep+3+Start' },
+                    { action: 'CURL', text: 'Rep 3: Slowly curl the bar up for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Bicep+Curl+Curl' },
+                    { action: 'LOWER', text: 'Rep 3: Slowly lower the bar for 5 seconds.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Bicep+Curl+Lower' },
+                    { text: 'Set complete! Rest for 60 seconds before your next set.', duration: 60, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rest' }
+                ]
+            },
+            'plank-hold': {
+                title: 'Plank Hold',
+                steps: [
+                    { text: 'Prepare: Forearms on floor, elbows under shoulders. Extend legs straight back.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Plank+Setup' },
+                    { action: 'HOLD', text: 'HOLD for 45-90 seconds. Engage core, squeeze glutes. Keep body straight from head to heels.', duration: 60, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Plank+Hold' },
+                    { text: 'Set complete! Rest for 60 seconds before your next set.', duration: 60, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rest' }
+                ]
+            },
+            'wall-sit': {
+                title: 'Wall Sit',
+                steps: [
+                    { text: 'Prepare: Back flat against wall. Slide down until knees are at 90 degrees, thighs parallel to floor.', duration: 5, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Wall+Sit+Setup' },
+                    { action: 'HOLD', text: 'HOLD for 30-60 seconds. Keep entire back pressed against wall. Core engaged.', duration: 45, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Wall+Sit+Hold' },
+                    { text: 'Set complete! Rest for 60 seconds before your next set.', duration: 60, img: 'https://placehold.co/300x200/a0c4ff/ffffff?text=Rest' }
+                ]
+            }
+        };
+
+        let currentExerciseId = null;
+        let currentStepIndex = 0;
+        let timerInterval = null;
+        let timeRemaining = 0;
+        let isPaused = false; // New state for pause functionality
+
+        // Tone.js setup for sound effect
+        const synth = new Tone.MembraneSynth().toDestination();
+
+        const modal = document.getElementById('exerciseModal');
+        const modalTitle = document.getElementById('modalExerciseTitle');
+        const modalImage = document.getElementById('modalExerciseImage');
+        const modalStepAction = document.getElementById('modalStepAction');
+        const modalDescription = document.getElementById('modalStepDescription');
+        const modalTimer = document.getElementById('modalTimer');
+        const prevStepBtn = document.getElementById('prevStepBtn');
+        const pauseResumeBtn = document.getElementById('pauseResumeBtn'); // New button
+        const nextStepBtn = document.getElementById('nextStepBtn');
+
+        // Function to toggle the detailed information section of an exercise card
+        function toggleDetails(cardElement) {
+            const details = cardElement.querySelector('.exercise-details');
+            if (details) {
+                details.classList.toggle('expanded');
+            }
+        }
+
+        // Function to toggle general info section
+        function toggleGeneralInfo() {
+            const content = document.getElementById('generalInfoContent');
+            const icon = document.getElementById('generalInfoToggleIcon');
+            content.classList.toggle('expanded');
+            icon.classList.toggle('expanded');
+        }
+
+        // Function to start an exercise session
+        function startExercise(exerciseId) {
+            currentExerciseId = exerciseId;
+            currentStepIndex = 0;
+            isPaused = false; // Reset pause state
+            pauseResumeBtn.textContent = 'Pause'; // Reset button text
+            modal.classList.add('active'); // Show modal
+            displayStep();
+        }
+
+        // Function to display the current step in the modal
+        function displayStep() {
+            clearInterval(timerInterval); // Clear any existing timer
+
+            const exercise = exerciseData[currentExerciseId];
+            if (!exercise || !exercise.steps[currentStepIndex]) {
+                finishExercise(); // End if no more steps
+                return;
+            }
+
+            const step = exercise.steps[currentStepIndex];
+
+            modalTitle.textContent = exercise.title;
+            modalImage.src = step.img || 'https://placehold.co/300x200/cccccc/333333?text=No+Image'; // Fallback image
+            modalDescription.textContent = step.text;
+
+            // Display action text if available, otherwise hide
+            if (step.action) {
+                modalStepAction.textContent = step.action;
+                modalStepAction.style.display = 'block';
+            } else {
+                modalStepAction.textContent = '';
+                modalStepAction.style.display = 'none';
+            }
+
+            // Update button states
+            prevStepBtn.disabled = currentStepIndex === 0;
+            // nextStepBtn.disabled is managed by pause state
+
+            // Handle timer
+            if (step.duration > 0) {
+                timeRemaining = step.duration;
+                updateTimerDisplay();
+                if (!isPaused) { // Only start timer if not paused
+                    timerInterval = setInterval(() => {
+                        timeRemaining--;
+                        updateTimerDisplay();
+                        if (timeRemaining <= 0) {
+                            clearInterval(timerInterval);
+                            synth.triggerAttackRelease('C4', '8n'); // Play sound
+                            nextStep(); // Automatically go to the next step
+                        }
+                    }, 1000);
+                }
+            } else {
+                modalTimer.textContent = 'User Paced'; // For steps without a specific duration
+            }
+        }
+
+        // Function to update the timer display
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            modalTimer.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // Function to go to the next step
+        function nextStep() {
+            currentStepIndex++;
+            if (currentStepIndex < exerciseData[currentExerciseId].steps.length) {
+                displayStep();
+            } else {
+                finishExercise(); // All steps completed
+            }
+        }
+
+        // Function to go to the previous step
+        function prevStep() {
+            currentStepIndex--;
+            if (currentStepIndex >= 0) {
+                displayStep();
+            } else {
+                currentStepIndex = 0; // Stay at first step
+            }
+        }
+
+        // Function to toggle pause/resume
+        function togglePause() {
+            isPaused = !isPaused;
+            if (isPaused) {
+                clearInterval(timerInterval);
+                pauseResumeBtn.textContent = 'Resume';
+            } else {
+                pauseResumeBtn.textContent = 'Pause';
+                displayStep(); // Restart timer from current timeRemaining
+            }
+        }
+
+        // Function to finish the exercise session and close the modal
+        function finishExercise() {
+            clearInterval(timerInterval);
+            modal.classList.remove('active'); // Hide modal
+            currentExerciseId = null;
+            currentStepIndex = 0;
+            timeRemaining = 0;
+            isPaused = false; // Reset pause state
+            modalStepAction.textContent = ''; // Clear action text on finish
+            modalStepAction.style.display = 'none';
+        }
+
+        // Event listener to close modal if clicked outside content (optional, but good UX)
+        modal.addEventListener('click', (event) => {
+            if (event.target === modal) {
+                finishExercise();
+            }
+        });
+    </script>
+
+</body>
+</html>
